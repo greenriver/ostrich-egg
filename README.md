@@ -1,4 +1,4 @@
-# Ostrich Egg: Aggregation Engine for Small-Cell Suppression
+# WIP — Ostrich Egg: Aggregation Engine for Small-Cell Suppression
 
 A tool for producing public analytics while protecting data privacy.
 
