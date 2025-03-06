@@ -1,0 +1,5 @@
+count,age,sex,zip_code,library_friend
+3,30,M,00000,Yes
+20,30,F,00000,Yes
+25,30,M,00000,No
+12,30,F,00000,No

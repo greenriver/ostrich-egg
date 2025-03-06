@@ -1,4 +1,2 @@
 __pycache__
 scratch*
-tests/data_outputs/*.parquet
-tests/data_outputs/*.csv
