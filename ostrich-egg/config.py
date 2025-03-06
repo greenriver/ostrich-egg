@@ -298,12 +298,18 @@ class Config(BaseModel):
     """
 
     datasource: DataSource
-    threshold: int = Field(
-        description=f"The inclusive lower boundary of allowable values. By default, it is {DEFAULT_THRESHOLD}, meaning any value less than this threshold should be anonymized according to the provided strategy",
-        default=DEFAULT_THRESHOLD,
-    )
+
     allow_zeroes: bool = Field(
         description="Whether a 0 value counts as below the threshold for evaluating anonymity. By default, this is true, meaning a 0 is considered anonymous. When false, 0 is considered a small number that is masked.",
         default=True,
     )
+    redaction_expression: Optional[str] = Field(
+        description="This expression is used in the aggregation queries to determine if a cell should be redacted. If not specified, then the first metric will be evaluated at the default threshold of 11.",
+        default=None,
+    )
     datasets: List[DatasetConfig]
+
+    threshold: Optional[int] = Field(
+        description=f"[DEPRECATED]: Single value for a threshold, being replaced by an expression.",
+        default=DEFAULT_THRESHOLD,
+    )
