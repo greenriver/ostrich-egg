@@ -2,15 +2,9 @@
 Configuration schema
 """
 
-import os
-import sys
-
-DIR = os.path.dirname(__file__)
-SRC_DIR = os.path.join(DIR, 'src')
-sys.path.extend([DIR, SRC_DIR])
 from typing import Any, Union, Annotated, List, Sequence, Optional, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 from enum import StrEnum
 
 from utils import identifier, get_logger, DEFAULT_MASKING_VALUE
@@ -36,13 +30,16 @@ class ReplaceWithRedactedParameters(BaseModel):
     masking_value: Optional[
         Annotated[
             Union[str, None],
-            Field(description='The masking value to apply to values in the dimension.', default=DEFAULT_MASKING_VALUE),
+            Field(
+                description="The masking value to apply to values in the dimension.",
+                default=DEFAULT_MASKING_VALUE,
+            ),
         ]
     ] = None
 
 
 class ReplaceWithRedacted(Strategy):
-    strategy: Literal['replace-with-redacted'] = 'replace-with-redacted'
+    strategy: Literal["replace-with-redacted"] = "replace-with-redacted"
     parameters: ReplaceWithRedactedParameters
 
 
@@ -68,7 +65,7 @@ class MarkRedacted(Strategy):
     Simply flag cells that must be suppressed by virtue of values under threshold or by virtue of requirement through latent revelation.
     """
 
-    strategy: Literal['mark-redacted'] = 'mark-redacted'
+    strategy: Literal["mark-redacted"] = "mark-redacted"
     parameters: Optional[MarkRedactedParameters] = None
 
 
@@ -79,25 +76,31 @@ class ReduceDimensionsParameters(BaseModel):
 
 
 class ReduceDimensionsStrategy(Strategy):
-    strategy: Literal['reduce-dimensions']
+    strategy: Literal["reduce-dimensions"]
     parameters: Annotated[
-        ReduceDimensionsParameters, Field(description="An object containing parameters for the strategy")
+        ReduceDimensionsParameters,
+        Field(description="An object containing parameters for the strategy"),
     ]
 
 
 class MergeDimensionValuesParameters(BaseModel):
-    dimension: str = Field(description='The dimension whose values are to be merged')
-    values: List[str] = Field(description='The ordinal precedence for which values to merge into one another')
-    merged_value: Annotated[Union[str, None], Field(description='The name of the value to merge the values into.')] = (
-        None
+    dimension: str = Field(description="The dimension whose values are to be merged")
+    values: List[str] = Field(
+        description="The ordinal precedence for which values to merge into one another"
     )
+    merged_value: Annotated[
+        Union[str, None],
+        Field(description="The name of the value to merge the values into."),
+    ] = None
 
 
 class MergeDimensionValuesStrategy(Strategy):
-    strategy: Literal['merge-dimension-values']
+    strategy: Literal["merge-dimension-values"]
     parameters: Annotated[
         List[MergeDimensionValuesParameters],
-        Field(description='The list of dimensions with their values and merged values to apply.'),
+        Field(
+            description="The list of dimensions with their values and merged values to apply."
+        ),
     ]
 
 
@@ -113,33 +116,37 @@ class FabricateUnitRecordsParameters(BaseModel):
         and not merely obscure a knowable population.
     """
 
-    unit_id_field: str = Field(description='The unit_id_field whose distinct count must be suppressed.')
+    unit_id_field: str = Field(
+        description="The unit_id_field whose distinct count must be suppressed."
+    )
 
     minimum_population_threshold: Annotated[
         int,
-        Field(description='The minimum population threshold for a dimension value to be considered for aggregation.'),
+        Field(
+            description="The minimum population threshold for a dimension value to be considered for aggregation."
+        ),
     ] = 20
     round_populations_to_the_nearest: Annotated[
         Literal[1, 5, 10, 20, 50, 100],
         Field(
-            description='The nearest multiple to round up non-suppressed populations. If 1, do not change the counts for non-suppressed populations.'
+            description="The nearest multiple to round up non-suppressed populations. If 1, do not change the counts for non-suppressed populations."
         ),
     ] = 10
 
 
 class FabricateUnitRecordsStrategy(Strategy):
-    strategy: Literal['fabricate-unit-records']
+    strategy: Literal["fabricate-unit-records"]
     parameters: Annotated[
         List[FabricateUnitRecordsParameters],
-        Field(description='The list of fabrication requirements.'),
+        Field(description="The list of fabrication requirements."),
     ]
 
 
 class Aggregations(StrEnum):
-    SUM = 'sum'
-    AVG = 'avg'
-    COUNT = 'count'
-    COUNT_DISTINCT = 'count_distinct'
+    SUM = "sum"
+    AVG = "avg"
+    COUNT = "count"
+    COUNT_DISTINCT = "count_distinct"
 
 
 aggregation_values = [e.value for e in Aggregations.__members__.values()]
@@ -147,7 +154,10 @@ aggregation_values = [e.value for e in Aggregations.__members__.values()]
 
 class Metric(BaseModel):
     aggregation: Annotated[
-        Aggregations, Field(description=f'What aggregation to use for this metric. one of {aggregation_values} ')
+        Aggregations,
+        Field(
+            description=f"What aggregation to use for this metric. one of {aggregation_values} "
+        ),
     ]
     column: Annotated[
         str,
@@ -160,7 +170,7 @@ class Metric(BaseModel):
         Annotated[
             Union[str, None],
             Field(
-                description='Alias for this metric to use as a name for reporting it. Not strictly necessary but might make reading the report easier if you have multiple metrics.'
+                description="Alias for this metric to use as a name for reporting it. Not strictly necessary but might make reading the report easier if you have multiple metrics."
             ),
         ]
     ] = None
@@ -168,12 +178,14 @@ class Metric(BaseModel):
     def render_as_sql_expression(self, include_alias=False):
         alias_expression = ""
         if self.alias:
-            alias_expression = f' as {identifier(self.alias)}'
+            alias_expression = f" as {identifier(self.alias)}"
         if self.aggregation == Aggregations.COUNT_DISTINCT and self.column:
             column_expression = f"count (distinct {self.column})"
         elif self.aggregation == Aggregations.COUNT_DISTINCT:
             logger = get_logger()
-            logger.warning("Configured with count distinct but no column specified. Setting to count.")
+            logger.warning(
+                "Configured with count distinct but no column specified. Setting to count."
+            )
             self.aggregation = Aggregations.COUNT
         if self.aggregation != Aggregations.COUNT_DISTINCT:
             column_expression = f"{self.aggregation}({identifier(self.column) or "*"})"
@@ -185,38 +197,40 @@ class Dataset(BaseModel):
     name: Optional[
         Annotated[
             Union[str, None],
-            Field(description='A human-friendly way to name this dataset'),
+            Field(description="A human-friendly way to name this dataset"),
         ]
     ] = None
     dimensions: Annotated[
         Union[List[str], None],
         Field(
-            description='A list of dimensions that should are included in the dataset. These are the actual column headers. If null, then all columns excluding the unit-level-id and the metrics will be considered dimensions.'
+            description="A list of dimensions that should are included in the dataset. These are the actual column headers. If null, then all columns excluding the unit-level-id and the metrics will be considered dimensions."
         ),
     ]
     unit_level_id: Annotated[
         Union[str, None],
         Field(
-            description='The column name for the unit-level-id, e.g., not-aggregate but identifies a unique record. This will be ignored in calculations except for count(distinct unit-level-id) and the metrics will group by the dimensions.',
-            alias='unit-level-id',
+            description="The column name for the unit-level-id, e.g., not-aggregate but identifies a unique record. This will be ignored in calculations except for count(distinct unit-level-id) and the metrics will group by the dimensions.",
+            alias="unit-level-id",
         ),
     ] = None
     metrics: Annotated[
         Union[List[Metric], None],
         Field(
-            description='The metrics that will be aggregated; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id).'
+            description="The metrics that will be aggregated; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id)."
         ),
     ] = None
 
 
 class DataSource(BaseModel):
     connection_type: Annotated[
-        Literal['s3', 'file'],
+        Literal["s3", "file"],
         Field(
             description='The type of connection to use for this data source. Must be one of "s3" "file" or "postgres.'
         ),
     ]
-    parameters: Optional[Annotated[dict, Field(description="Connection parameters for the data source")]] = None
+    parameters: Optional[
+        Annotated[dict, Field(description="Connection parameters for the data source")]
+    ] = None
 
     @property
     def connection_params(self):
@@ -243,15 +257,27 @@ class DatasetConfig(Dataset):
     suppression_strategies: Annotated[
         # List[SuppressionStrategy], discriminator='strategy',
         Union[
-            List[Union[ReduceDimensionsStrategy, MergeDimensionValuesStrategy, ReplaceWithRedacted, MarkRedacted]], list
+            List[
+                Union[
+                    ReduceDimensionsStrategy,
+                    MergeDimensionValuesStrategy,
+                    ReplaceWithRedacted,
+                    MarkRedacted,
+                ]
+            ],
+            list,
         ],
-        Field(description='List of suppression strategies', alias='suppression-strategies', default_factory=list),
+        Field(
+            description="List of suppression strategies",
+            alias=AliasChoices("suppression-strategies", "suppression_strategies"),
+            default_factory=list,
+        ),
     ]
     output_file: Optional[
         Annotated[
             Union[str, None],
             Field(
-                description='The filepath you want want to write out to. In the future, this can be more of an object that can configure things like table, s3 location, etc, but for Proof-of-concept just writing to file (which is really an s3 key)'
+                description="The filepath you want want to write out to. In the future, this can be more of an object that can configure things like table, s3 location, etc, but for Proof-of-concept just writing to file (which is really an s3 key)"
             ),
         ]
     ] = None
@@ -259,7 +285,7 @@ class DatasetConfig(Dataset):
         Annotated[
             Union[dict, None],
             Field(
-                description='Dataset-level configurations for your application. For example, if you need to map the results of intermediary dimensionality.'
+                description="Dataset-level configurations for your application. For example, if you need to map the results of intermediary dimensionality."
             ),
         ]
     ] = None

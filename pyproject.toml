@@ -1,0 +1,10 @@
+[project]
+name = "ostrich-egg"
+version = "0.0.0"
+description = "A tool for producing public analytics while protecting data privacy."
+readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+addopts = "--tb=auto -vv --log-level=ERROR --log-cli-level=ERROR --show-capture=stderr"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning"]

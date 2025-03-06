@@ -1,0 +1,5 @@
+# https://flake8.pycqa.org/en/latest/user/configuration.html
+[flake8]
+max-line-length = 200
+exclude = *scratch*
+select = F,E9,E111,E112,E113,E117 # Only lint with pyflakes, don't contradict black style
