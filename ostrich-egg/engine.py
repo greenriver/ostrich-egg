@@ -147,7 +147,7 @@ class Engine:
     def redaction_expression(self) -> str:
         redaction_expression = self.config.redaction_expression
         if not redaction_expression:
-            redaction_expression = f"{self.metric_aliases[0]} < {DEFAULT_THRESHOLD}"
+            redaction_expression = f"{self.metrics[0].alias} < {DEFAULT_THRESHOLD}"
         return redaction_expression
 
     @property
