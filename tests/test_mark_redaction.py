@@ -1,9 +1,5 @@
-from io import StringIO
-from tempfile import NamedTemporaryFile
-
 import pytest
 
-from connectors.file_system import FileSystemConnector
 from engine import Engine
 from config import (
     Config,
@@ -19,11 +15,13 @@ from config import (
 @pytest.fixture()
 def file_system_config() -> Config:
     return Config(
-        datasource=DataSource(connection_type="file"),
-        parameters={"output_directory": "/tmp/"},
+        datasource=DataSource(
+            connection_type="file",
+            parameters={"output_directory": "/tmp/"},
+        ),
         datasets=[
             DatasetConfig(
-                source_file="./tests/data_outputs/library_example.csv",
+                source_file="./tests/data_inputs/library_example.csv",
                 dimensions=["age", "sex", "zip_code", "library_friend"],
                 metrics=[
                     Metric(aggregation=Aggregations.SUM, column="count", alias="count")

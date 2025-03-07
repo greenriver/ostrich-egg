@@ -1,0 +1,35 @@
+name: Python CI
+
+on:
+  push:
+    paths:
+      - "**.py"
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "**.py"
+    branches:
+      - "*"
+      - "*/*"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip" # caching pip dependencies
+      - run: |
+          pip install --upgrade pip
+          pip install -r dependencies/requirements.txt
+          pip install -r dependencies/requirements.test.txt
+        name: "Install Dependencies"
+      - name: "Lint with Flake8"
+        run: flake8
+      - name: "Format with Black"
+        run: black .
+      - name: "Test with Pytest"
+        run: pytest

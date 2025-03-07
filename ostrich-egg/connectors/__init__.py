@@ -5,14 +5,18 @@ from typing import Literal
 from enum import Enum
 
 
-connector_lkp = {'s3': S3Connector, 'file': FileSystemConnector}
+connector_lkp = {"s3": S3Connector, "file": FileSystemConnector}
 
-Supported_Connectors = Enum('SupportedConnectors', {key: key for key in connector_lkp.keys()})
+Supported_Connectors = Enum(
+    "SupportedConnectors", {key: key for key in connector_lkp.keys()}
+)
 
 
-def Connector(connection_type: Literal['s3', 'file'], **parameters: dict) -> BaseConnector:
+def Connector(
+    connection_type: Literal["s3", "file"], **parameters: dict
+) -> BaseConnector:
     try:
         connector = connector_lkp[connection_type]
     except KeyError:
-        raise KeyError(f'Invalid connector type: f{type}')
+        raise KeyError(f"Invalid connector type: f{type}")
     return connector(**parameters)
