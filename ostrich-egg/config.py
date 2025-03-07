@@ -310,6 +310,6 @@ class Config(BaseModel):
     datasets: List[DatasetConfig]
 
     threshold: Optional[int] = Field(
-        description=f"[DEPRECATED]: Single value for a threshold, being replaced by an expression.",
+        description="[DEPRECATED]: Single value for a threshold, being replaced by an expression.",
         default=DEFAULT_THRESHOLD,
     )

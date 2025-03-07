@@ -8,7 +8,6 @@ import os
 from typing import Dict, List
 
 import duckdb
-from pandas import DataFrame
 from jinja2 import Template
 
 from utils import (
@@ -39,7 +38,9 @@ DEFAULT_METRIC = "count(*)"
 DEFAULT_RESULT_NAME = "result"
 
 IS_ANONYMOUS_COLUMN = "is_anonymous"
-
+IS_REDACTED_COLUMN = "is_redacted"
+DIMENSION_VALUE_COLUMN = "dimension_value"
+METRIC_VALUE_COLUMN = "metric_value"
 
 logger = get_logger()
 
@@ -83,7 +84,10 @@ class Engine:
 
         self.redactions: Dict[str, List[RedactionIterationResult]] = {}
         self.final_source_table = self.connector.table_name
-        self.output_directory = output_directory
+        self.output_directory = (
+            output_directory
+            or config.datasource.connection_params.get("output_directory")
+        )
         self.output_prefix = output_prefix
         self.output_bucket = output_bucket
         self.cache_tables_in_memory = cache_tables_in_memory
@@ -145,6 +149,20 @@ class Engine:
         if not redaction_expression:
             redaction_expression = f"{self.metric_aliases[0]} < {DEFAULT_THRESHOLD}"
         return redaction_expression
+
+    @property
+    def db(self) -> duckdb.DuckDBPyConnection:
+        return self.connector.duckdb_connection
+
+    @property
+    def anonymous_expression(self) -> str:
+        """
+        Users configure the redaction expression, i.e., when to mark something as _not_ anymous.
+        This is the inverse.
+
+        In the output, is_redacted flags both non-anonymous _and_ latent suppression.
+        """
+        return f"not {self.redaction_expression}"
 
     def make_updated_expressions(self) -> dict:
         """
@@ -259,12 +277,12 @@ class Engine:
             "dimensions": dimensions_as_sql_object,
             "table_name": table_name or self.connector.table_name,
             # "wrapper_list_check": self.get_wrapper_metrics_pass_expression_from_redaction_expression(),
-            "redaction_expression": self.redaction_expression,
+            "anonymous_expression": self.anonymous_expression,
             "is_anonymous": IS_ANONYMOUS_COLUMN,
         }
 
-        sql_template = """
-        select *, {{redaction_expression}} as {{is_anonymous}}
+        sql_template = """\
+        select *, {{anonymous_expression}} as {{is_anonymous}}
         from (
             select {{metric_list|join(', ')}}, {{ dimensions.select }}
             from "{{ table_name }}"
@@ -355,7 +373,7 @@ class Engine:
                 f"""
                 select distinct peer_id
                 from identify_peers
-                order by is_anonymous, {metric_sort}, peer_id
+                order by {IS_ANONYMOUS_COLUMN}, {metric_sort}, peer_id
                 """
             ).fetchall()
         ]
@@ -363,11 +381,11 @@ class Engine:
         # it will be set to True if a small cell needs a neighbor to be suppressed.
         must_anonymize_next = False
         for peer_id in peer_ids:
-
+            # identify the peers within this aggregation that might need to be latently redacted
             peer_value_sql = f"""
                 select x as peer
                 from (
-                    select {sql_expressions.aliases}, {metrics_sql}, {anonymous_metric} as is_anonymous, sum({metric_name}) as total
+                    select {sql_expressions.aliases}, sum({metric_name}) as total
                     from identify_peers
                     where peer_id = $peer_id
                     group by {sql_expressions.aliases}
@@ -378,11 +396,15 @@ class Engine:
                 query=peer_value_sql, params={"peer_id": peer_id}
             ).fetchone()
             total = peer_values.pop("total", None)
-            is_anonymous = peer_values.pop("is_anonymous", None)
+
             filter_by_peer = duckdb.ColumnExpression("peer_id").isin(peer_id)
             this_peer_relation = (
                 identify_peers.filter(filter_by_peer)
-                .select("dimension_value", "is_anonymous", *self.metric_aliases.keys())
+                .select(
+                    DIMENSION_VALUE_COLUMN,
+                    IS_ANONYMOUS_COLUMN,
+                    *self.metric_aliases.keys(),
+                )
                 .order(metric_sort)
             )
             peer_result, must_anonymize_next = (
@@ -407,7 +429,7 @@ class Engine:
         masking_value: str = DEFAULT_MASKING_VALUE,
     ) -> tuple[list[RedactionIterationResult], bool]:
         """
-        Main engine for latent anonymiztation
+        Main engine for latent anonymization
 
         Assumes `this_peer_relation` has 2 values: dimension_value and metric_value
         and is sorted ascending by metric_value.
@@ -416,31 +438,7 @@ class Engine:
         If it's the last batch and we need anonymizing we've just redacted everything.
         """
         values_to_mask = []
-        working_rows = []
-        peer_row_check_template = Template(
-            """\
-        select x
-        from (
-            select *, {{redaction_expression}} as is_anonymous
-            from (
-                select {{metric_list|join(', ')}}
-                from working_table
-            ) as aggregated
-        ) as x
-        """
-        )
-
-        def check_result_helper() -> dict:
-            """
-            TODO: instead of loading results into dataframe, can we instead collect seen dimension values? This would tee us up for postgres better.
-            """
-            working_table = duckdb.from_df(DataFrame(working_rows))
-            duckdb.register(view_name="working_table", python_object=working_table)
-            sql = peer_row_check_template.render(
-                metric_list=self.metric_sql_list,
-                redaction_expression=self.redaction_expression,
-            )
-            return self.connector.duckdb_connection.sql(sql).fetchone()
+        seen_values = []
 
         anonymized = False
         row_count, *_ = this_peer_relation.count("*").fetchone()
@@ -450,15 +448,38 @@ class Engine:
             if not local_result:
                 break
             local_result = dict(zip(this_peer_relation.columns, local_result))
-            value_is_fine = local_result["is_anonymous"]
+            value_is_fine = local_result[IS_ANONYMOUS_COLUMN]
 
             if within_peer_index > 0:
-                check_result = check_result_helper()
-                working_total_is_fine = check_result["is_anonymous"]
+                working_subtotal_query_template = Template(
+                    """\
+        select x
+        from (
+            select *, {{anonymous_expression}} as {{is_anonymous}}
+            from (
+                select {{metric_list|join(', ')}}
+                from identify_peers
+                where list_contains($seen_values, dimension_value)
+            ) as aggregated
+        ) as x
+        """
+                )
+                sql = working_subtotal_query_template.render(
+                    metric_list=self.metric_sql_list,
+                    anonymous_expression=self.anonymous_expression,
+                    is_anonymous=IS_ANONYMOUS_COLUMN,
+                )
+                working_subtotal, *_ = self.connector.duckdb_connection.sql(
+                    sql, params={"seen_values": seen_values}
+                ).fetchone()
+                working_total_is_fine = working_subtotal[IS_ANONYMOUS_COLUMN]
             else:
                 working_total_is_fine = value_is_fine
 
-            dimension_value = local_result["dimension_value"]
+            dimension_value = local_result[DIMENSION_VALUE_COLUMN]
+
+            seen_values.append(dimension_value)
+
             first_value_is_good = within_peer_index == 0 and value_is_fine
 
             if not must_anonymize_next and first_value_is_good:
@@ -498,11 +519,11 @@ class Engine:
                 There has been suppression of previous values and we are now safely anonymized
                 """
                 filter_by_excluded_values = duckdb.ColumnExpression(
-                    "dimension_value"
+                    DIMENSION_VALUE_COLUMN
                 ).isnotin(*[duckdb.ConstantExpression(v) for v in values_to_mask])
                 remainder, *_ = (
                     this_peer_relation.filter(filter_by_excluded_values)
-                    .sum("metric_value")
+                    .sum(METRIC_VALUE_COLUMN)
                     .fetchone()
                 )
 
@@ -522,7 +543,7 @@ class Engine:
                     f"Redacting {dimension_value} as it would latently reveal an unacceptable metric value through subtraction."
                 )
                 values_to_mask.append(dimension_value)
-                working_rows.append(local_result)
+                seen_values.append(dimension_value)
 
             elif must_anonymize_next and not value_is_fine:
                 # a small value was seen by previous peer, the next value must be anonymized irrespective of the rest of the peer size.
@@ -530,7 +551,7 @@ class Engine:
                     f"Redacting {dimension_value} as it would latently reveal an unacceptable metric value through subtraction."
                 )
                 values_to_mask.append(dimension_value)
-                working_rows.append(local_result)
+                seen_values.append(dimension_value)
 
             within_peer_index += 1
         peer_result = (
@@ -763,6 +784,7 @@ class Engine:
         if output_file:
             written_file = self.write_anonymized_dataset_to_file(file_path=output_file)
             logger.info(f"wrote out to {written_file}")
+            self.active_dataset.output_file = written_file
             if self.cache_tables_in_memory:
                 self.source_file_to_table_lkp[written_file] = dataset.name
                 self.connector.duckdb_connection.execute(

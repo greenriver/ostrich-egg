@@ -4,15 +4,15 @@ import duckdb
 from typing import List
 
 ENVIRONMENT_LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-DEFAULT_MASKING_VALUE = 'redacted'
+DEFAULT_MASKING_VALUE = "redacted"
 
 
-def get_logger(name: str = 'anonymization_service'):
+def get_logger(name: str = "anonymization_service"):
     logger = logging.getLogger(name=name)
     logger.setLevel(getattr(logging, ENVIRONMENT_LOG_LEVEL))
     formatter = logging.Formatter(
         "%(asctime)s-%(filename)s:%(lineno)d-%(levelname)s: %(message)s",
-        datefmt='%Y-%m-%d %H:%M:%S',
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -42,7 +42,7 @@ def dict_to_filter_expressions(data: dict) -> List[duckdb.Expression]:
 
 
 def merge_conditions(conditions: List[duckdb.Expression]) -> str:
-    return ' and '.join([str(f) for f in conditions])
+    return " and ".join([str(f) for f in conditions])
 
 
 def apply_list_of_filters_to_relation(
@@ -61,5 +61,5 @@ def make_when_statement_from_dict(data: dict, value: str) -> duckdb.CaseExpressi
     value_expression = duckdb.ConstantExpression(value)
     filters = dict_to_filter_expressions(data)
     condition = merge_conditions(filters)
-    expression = f'when {condition} then {value_expression}'
+    expression = f"when {condition} then {value_expression}"
     return expression

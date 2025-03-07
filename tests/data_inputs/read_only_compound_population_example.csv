@@ -1,0 +1,7 @@
+sex,zip,expected_to_be_anonymous,expected_to_be_redacted,incidence,population
+M,00000,False,True,1,10000
+F,00000,True,True,12,10000
+F,00001,True,False,22,20000
+M,00002,True,False,15,10000
+M,00003,False,True,15,1000
+M,00001,True,True,2,20000

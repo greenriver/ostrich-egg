@@ -8,7 +8,7 @@ from jinja2 import Template
 from connectors.base import BaseConnector
 
 # refer to https://duckdb.org/docs/configuration/secrets_manager
-DEFAULT_S3_SECRET_NAME = '__default_s3'
+DEFAULT_S3_SECRET_NAME = "__default_s3"
 
 
 def key_as_s3_uri(bucket, key) -> str:
@@ -18,32 +18,32 @@ def key_as_s3_uri(bucket, key) -> str:
     """
     import re
 
-    if not key.startswith('s3://'):
-        key = re.sub(pattern=f'^{bucket}/', string=key, repl='')
-        key = f's3://{bucket}/{key}'
+    if not key.startswith("s3://"):
+        key = re.sub(pattern=f"^{bucket}/", string=key, repl="")
+        key = f"s3://{bucket}/{key}"
     return key
 
 
 class S3Connector(BaseConnector):
 
     extensions = (
-        'httpfs',
-        'aws',
-        'spatial',
+        "httpfs",
+        "aws",
+        "spatial",
     )
 
     def __init__(
         self,
         bucket: str,
         key: str,
-        region='us-east-1',
+        region="us-east-1",
         access_key_id=None,
         secret_access_key=None,
         session_token=None,
         endpoint: str = None,
         use_credential_chain: bool = False,
         use_ssl: bool = True,
-        url_style: Literal['vhost', 'path'] = 'vhost',
+        url_style: Literal["vhost", "path"] = "vhost",
         chain: str = None,
         *args,
         **kwargs,
@@ -89,7 +89,7 @@ class S3Connector(BaseConnector):
             creds = None
         context = {
             "use_credential_chain": self.use_credential_chain,
-            "use_ssl": 'false' if not self.use_ssl else 'true',
+            "use_ssl": "false" if not self.use_ssl else "true",
             "creds": creds,
             "params": {
                 "key_id": self.access_key_id,
@@ -135,7 +135,13 @@ class S3Connector(BaseConnector):
         self.drop_secret()
         self.create_s3_secret()
 
-    def load_source_table(self, table_name: str = None, bucket: str = None, source_file: str = None, **kwargs):
+    def load_source_table(
+        self,
+        table_name: str = None,
+        bucket: str = None,
+        source_file: str = None,
+        **kwargs,
+    ):
         """
         Ultimately, the in-memory process needs to read the s3 file.
         So, probably what would wind up an interface so that all connectors `create_table`
@@ -147,9 +153,9 @@ class S3Connector(BaseConnector):
         key = key_as_s3_uri(bucket=bucket, key=key)
         self.init_duckdb()
         self.duckdb_connection.execute(
-            f'''
+            f"""
             create or replace table "{table_name}" as (
                 select * from '{key}'
             )
-        '''
+        """
         )

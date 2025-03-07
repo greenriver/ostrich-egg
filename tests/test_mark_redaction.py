@@ -1,6 +1,5 @@
 import pytest
 
-from connectors.file_system import FileSystemConnector
 from engine import Engine
 from config import (
     Config,
@@ -22,7 +21,7 @@ def file_system_config() -> Config:
         ),
         datasets=[
             DatasetConfig(
-                source_file="./tests/data_outputs/library_example.csv",
+                source_file="./tests/data_inputs/library_example.csv",
                 dimensions=["age", "sex", "zip_code", "library_friend"],
                 metrics=[
                     Metric(aggregation=Aggregations.SUM, column="count", alias="count")

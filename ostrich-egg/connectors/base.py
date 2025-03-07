@@ -3,8 +3,8 @@ from functools import cached_property
 
 import duckdb
 
-DEFAULT_TABLE_NAME = 'dataset'
-DEFAULT_RESULT_NAME = 'result'
+DEFAULT_TABLE_NAME = "dataset"
+DEFAULT_RESULT_NAME = "result"
 
 
 class BaseConnector(AbstractBaseClass):
@@ -20,10 +20,10 @@ class BaseConnector(AbstractBaseClass):
     """
 
     extensions = (
-        'httpfs',
-        'aws',
-        'spatial',
-        'postgres',
+        "httpfs",
+        "aws",
+        "spatial",
+        "postgres",
     )
 
     def __init__(self, table_name=DEFAULT_TABLE_NAME, **kwargs):
