@@ -39,3 +39,18 @@ Ostrich Egg is a tool that encourages users to think critically about what dimen
 2. establish thresholds for each metric or fact you present. This might be requirement or regulation-driven. If you're not sure what's too small, we suggest using 11 as the default. If you are dealing with protected data like health data, you might be more cautious for certain population sizes and suppress any value where a population is sufficiently small, e.g., 2,500. Populations consider the location (e.g., a zip code) and the demography. When a demographic or semantic population is unknown (for example, the public won't know the number of friends of the library until you tell them), you might need to use discretion but generally want to be cautions with any of the data elements protected by common data privacy regulations.
 3. decide if you can re-categorize the values in you dimensions to be less granular. For example, using age ranges like `18-24`, `25-34`.
 4. consider your strategy for redaction. You might want to mark the value of small cells with a value like `Redacted`, or possibly just flag for a given reporting dimension, mark redacted cells that either below the threshold or need to be suppressed to prevent latent revelation.
+
+--------
+```
+Copyright © 2025 Green River Data Analysis, LLC
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+```
