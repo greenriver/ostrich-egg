@@ -30,6 +30,6 @@ jobs:
       - name: "Lint with Flake8"
         run: flake8
       - name: "Format with Black"
-        run: black
+        run: black .
       - name: "Test with Pytest"
         run: pytest
