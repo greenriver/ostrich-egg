@@ -219,6 +219,15 @@ class Dataset(BaseModel):
             description="The metrics that will be aggregated; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id)."
         ),
     ] = None
+    sql: Optional[
+        Annotated[
+            Union[str, None],
+            Field(
+                description="The internal SQL to produce the 'view' of this dataset",
+                default=None,
+            ),
+        ]
+    ] = None
 
 
 class DataSource(BaseModel):
@@ -250,22 +259,26 @@ class DatasetConfig(Dataset):
         Annotated[
             Union[str, None],
             Field(
-                description="At present this is called a file for simplicity. It's actually likely a key for s3 or a fully qualified table name for postgres. If not specified, the source is in the datasource."
+                description="At present this is called a file for simplicity. It's actually likely a key for s3 or a fully qualified table name for postgres. If not specified, the source is in the datasource.",
+                default=None,
             ),
         ]
     ] = None
     suppression_strategies: Annotated[
         # List[SuppressionStrategy], discriminator='strategy',
-        Union[
-            List[
-                Union[
-                    ReduceDimensionsStrategy,
-                    MergeDimensionValuesStrategy,
-                    ReplaceWithRedacted,
-                    MarkRedacted,
-                ]
-            ],
-            list,
+        Optional[
+            Union[
+                List[
+                    Union[
+                        ReduceDimensionsStrategy,
+                        MergeDimensionValuesStrategy,
+                        ReplaceWithRedacted,
+                        MarkRedacted,
+                    ]
+                ],
+                list,
+                None,
+            ]
         ],
         Field(
             description="List of suppression strategies",
