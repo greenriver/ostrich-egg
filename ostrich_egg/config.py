@@ -7,7 +7,7 @@ from typing import Any, Union, Annotated, List, Sequence, Optional, Literal
 from pydantic import BaseModel, Field, AliasChoices
 from enum import StrEnum
 
-from utils import identifier, get_logger, DEFAULT_MASKING_VALUE
+from ostrich_egg.utils import identifier, get_logger, DEFAULT_MASKING_VALUE
 
 DEFAULT_THRESHOLD = 11
 

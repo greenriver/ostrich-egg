@@ -10,7 +10,7 @@ from typing import Dict, List
 import duckdb
 from jinja2 import Template
 
-from utils import (
+from ostrich_egg.utils import (
     DEFAULT_MASKING_VALUE,
     dict_to_filter_expressions,
     get_logger,
@@ -18,7 +18,7 @@ from utils import (
     make_when_statement_from_dict,
     merge_conditions,
 )
-from config import (
+from ostrich_egg.config import (
     Config,
     DatasetConfig,
     ReplaceWithRedactedParameters,
@@ -30,8 +30,8 @@ from config import (
     # SuppressionStrategy,
     DEFAULT_THRESHOLD,
 )
-from connectors import Connector, DEFAULT_TABLE_NAME
-from connectors.s3 import key_as_s3_uri
+from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
+from ostrich_egg.connectors.s3 import key_as_s3_uri
 
 
 DEFAULT_METRIC = "count(*)"
