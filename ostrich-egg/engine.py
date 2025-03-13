@@ -771,6 +771,12 @@ class Engine:
         ):
             # We are seeing this file reference for the first time, we'll keep track in case we're running in a single process and want to re-use cached data.
             self.connector.load_source_table(source_file=dataset.source_file)
+        elif not dataset.source_file and dataset.sql:
+            logger.info(
+                f"Attempting to create an in-memory table {dataset.name} using: \n{dataset.sql}"
+            )
+            wrapper_sql = f"create or replace table {dataset.name} as {dataset.sql}"
+            self.db.sql(wrapper_sql)
         elif not dataset.source_file:
             # load it in the default manner without a specified table name.
             self.connector.load_source_table()

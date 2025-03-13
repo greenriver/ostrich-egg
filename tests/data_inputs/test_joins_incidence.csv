@@ -1,0 +1,2 @@
+age,zip,year,incidence,expected_to_be_anonymous,expected_to_be_redacted
+18-24,00000,2025,12,FALSE,TRUE
