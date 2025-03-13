@@ -5,7 +5,7 @@ import boto3
 import duckdb
 from jinja2 import Template
 
-from connectors.base import BaseConnector
+from ostrich_egg.connectors.base import BaseConnector
 
 # refer to https://duckdb.org/docs/configuration/secrets_manager
 DEFAULT_S3_SECRET_NAME = "__default_s3"

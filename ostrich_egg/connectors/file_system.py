@@ -1,4 +1,4 @@
-from connectors.base import BaseConnector
+from ostrich_egg.connectors.base import BaseConnector
 
 
 class FileSystemConnector(BaseConnector):
