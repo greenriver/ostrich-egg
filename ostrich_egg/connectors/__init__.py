@@ -1,6 +1,6 @@
-from connectors.base import BaseConnector, DEFAULT_TABLE_NAME  # noqa:F401
-from connectors.s3 import S3Connector
-from connectors.file_system import FileSystemConnector
+from ostrich_egg.connectors.base import BaseConnector, DEFAULT_TABLE_NAME  # noqa:F401
+from ostrich_egg.connectors.s3 import S3Connector
+from ostrich_egg.connectors.file_system import FileSystemConnector
 from typing import Literal
 from enum import Enum
 
