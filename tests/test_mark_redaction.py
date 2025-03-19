@@ -50,3 +50,13 @@ def test_basic_mark_redaction(file_system_config):
     redaction_count, *_ = t.filter("is_redacted").count("*").fetchone()
     assert anonymous_count == 1
     assert redaction_count == 2
+
+    # confirm that suppression strategies are deserialized correctly (i.e., assert no error)
+    file_system_config.datasets[0].suppression_strategies[0] = {
+        "strategy": "mark-redacted",
+        "parameters": {"redacted_dimension": "sex"},
+    }
+    engine = Engine(config=file_system_config)
+    output_file = "/tmp/output.parquet"
+    engine.datasets[0].output_file = output_file
+    engine.run()
