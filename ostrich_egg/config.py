@@ -4,7 +4,7 @@ Configuration schema
 
 from typing import Any, Union, Annotated, List, Sequence, Optional, Literal
 
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices, TypeAdapter
 from enum import StrEnum
 
 from ostrich_egg.utils import identifier, get_logger, DEFAULT_MASKING_VALUE
@@ -252,6 +252,19 @@ class DataSource(BaseModel):
         return params
 
 
+SuppressionStrategy = Annotated[
+    Union[
+        ReduceDimensionsStrategy,
+        MergeDimensionValuesStrategy,
+        ReplaceWithRedacted,
+        MarkRedacted,
+    ],
+    Field(discriminator="strategy"),
+]
+
+load_strategy_from_dict = TypeAdapter(SuppressionStrategy).validate_python
+
+
 class DatasetConfig(Dataset):
     """Service configuration"""
 
@@ -268,14 +281,7 @@ class DatasetConfig(Dataset):
         # List[SuppressionStrategy], discriminator='strategy',
         Optional[
             Union[
-                List[
-                    Union[
-                        ReduceDimensionsStrategy,
-                        MergeDimensionValuesStrategy,
-                        ReplaceWithRedacted,
-                        MarkRedacted,
-                    ]
-                ],
+                List[SuppressionStrategy],
                 list,
                 None,
             ]

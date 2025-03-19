@@ -27,7 +27,7 @@ from ostrich_egg.config import (
     Metric,
     Aggregations,
     Strategy,
-    # SuppressionStrategy,
+    load_strategy_from_dict,
     DEFAULT_THRESHOLD,
 )
 from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
@@ -690,6 +690,8 @@ class Engine:
 
     def process_suppression_strategies(self):
         for index, strategy in enumerate(self.active_dataset.suppression_strategies):
+            if isinstance(strategy, dict):
+                strategy = load_strategy_from_dict(strategy)
             logger.info(f"Processing strategy {index}: {strategy.strategy}")
             self.process_one_suppression_strategy(strategy)
 
