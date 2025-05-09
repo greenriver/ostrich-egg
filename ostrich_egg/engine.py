@@ -760,7 +760,7 @@ class Engine:
     ):
         dataset.name = dataset.name or f"{DEFAULT_TABLE_NAME}_{index}"
         table_name = dataset.name
-        if index > 0:
+        if index > 0 and not dataset.sql:
             dataset.source_file = self.get_absolute_source_file(dataset.source_file)
         self.connector.table_name = dataset.name
         self.active_dataset = dataset
