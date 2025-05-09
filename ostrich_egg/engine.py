@@ -719,6 +719,8 @@ class Engine:
             )
 
     def get_absolute_source_file(self, file_path: str):
+        if not file_path:
+            return file_path
         if self.output_directory:
             file_path = os.path.join(self.output_directory, os.path.basename(file_path))
         if self.output_bucket and not file_path.startswith("s3://"):
