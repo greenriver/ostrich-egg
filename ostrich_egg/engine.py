@@ -297,6 +297,7 @@ class Engine:
         dimensions: list = None,
         result_name=DEFAULT_RESULT_NAME,
         table_name: str = None,
+        initial: bool = False,
     ):
         """
         Run aggregations according to the dataset definition.
@@ -307,7 +308,12 @@ class Engine:
             dimensions=dimensions, table_name=table_name
         )
         __result__ = self.connector.duckdb_connection.sql(sql)
-        self.connector.duckdb_connection.register(result_name, __result__)
+        if initial:
+            self.connector.duckdb_connection.execute(
+                f"create or replace table {result_name} as select * from __result__"
+            )
+        else:
+            self.connector.duckdb_connection.register(result_name, __result__)
 
     def drop_dimension(self, dimension: str):
         if dimension not in self.active_dimensions:
@@ -784,7 +790,7 @@ class Engine:
             # load it in the default manner without a specified table name.
             self.connector.load_source_table()
         logger.info("Running initial aggregation")
-        self.run_aggregation(table_name=table_name)
+        self.run_aggregation(table_name=table_name, initial=index == 0)
         logger.info("Running suppression strategies")
         self.process_suppression_strategies()
         logger.info("Producing anonymized dataset")
