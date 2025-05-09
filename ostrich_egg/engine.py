@@ -751,7 +751,7 @@ class Engine:
         """
         self.connector.init_duckdb()
         for index, dataset in enumerate(self.datasets):
-            self.run_one_dataset(index=index, dataset=dataset)
+            self.run_one_dataset(index=index, dataset=dataset, output_file=output_file)
 
     def run_one_dataset(
         self, index: int, dataset: DatasetConfig, output_file: str = None
