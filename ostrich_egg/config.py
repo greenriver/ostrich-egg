@@ -147,6 +147,7 @@ class Aggregations(StrEnum):
     AVG = "avg"
     COUNT = "count"
     COUNT_DISTINCT = "count_distinct"
+    ANY_VALUE = "any_value"
 
 
 aggregation_values = [e.value for e in Aggregations.__members__.values()]
@@ -174,13 +175,28 @@ class Metric(BaseModel):
             ),
         ]
     ] = None
+    null_is_zero: Optional[bool] = Field(
+        description="If true, null values will be treated as 0 via coalesce. If false, null values will be discarded in the result of the aggregation.",
+        default=False,
+    )
+    expression: Optional[Union[str, None]] = Field(
+        description="A literal expression to use for the metric. Let's a user create advanced custom metrics",
+        default=None,
+    )
 
     def render_as_sql_expression(self, include_alias=False):
+        if self.expression:
+            return self.expression
         alias_expression = ""
+        column_identifier = (
+            identifier(self.column) if self.column and self.column != "*" else "*"
+        )
+        if self.null_is_zero and self.column != "*":
+            column_identifier = f"coalesce({column_identifier}, 0)"
         if self.alias:
             alias_expression = f" as {identifier(self.alias)}"
         if self.aggregation == Aggregations.COUNT_DISTINCT and self.column:
-            column_expression = f"count (distinct {self.column})"
+            column_expression = f"count (distinct {column_identifier})"
         elif self.aggregation == Aggregations.COUNT_DISTINCT:
             logger = get_logger()
             logger.warning(
@@ -188,7 +204,7 @@ class Metric(BaseModel):
             )
             self.aggregation = Aggregations.COUNT
         if self.aggregation != Aggregations.COUNT_DISTINCT:
-            column_expression = f"{self.aggregation}({identifier(self.column) or "*"})"
+            column_expression = f"{self.aggregation}({column_identifier})"
         return f"{column_expression}{alias_expression if include_alias else ''}"
 
 

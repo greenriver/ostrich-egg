@@ -1,7 +1,5 @@
 import os
 from uuid import uuid4
-
-from moto.server import ThreadedMotoServer
 import pytest
 
 from conftest import TEST_DIRECTORY, TEST_S3_PARAMS
@@ -89,15 +87,6 @@ def s3_files_prefix(mock_s3_bucket, mocked_s3_client):
             Bucket=mock_s3_bucket,
             Key=object_name,
         )
-
-
-@pytest.fixture
-def moto_server():
-    server = ThreadedMotoServer(port=0)
-    server.start()
-    host, port = server.get_host_and_port()
-    yield f"http://{host}:{port}"
-    server.stop()
 
 
 class TestJoinExpressions:
