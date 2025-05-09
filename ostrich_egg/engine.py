@@ -719,6 +719,8 @@ class Engine:
             )
 
     def get_absolute_source_file(self, file_path: str):
+        if not file_path:
+            return file_path
         if self.output_directory:
             file_path = os.path.join(self.output_directory, os.path.basename(file_path))
         if self.output_bucket and not file_path.startswith("s3://"):
@@ -758,7 +760,7 @@ class Engine:
     ):
         dataset.name = dataset.name or f"{DEFAULT_TABLE_NAME}_{index}"
         table_name = dataset.name
-        if index > 0:
+        if index > 0 and not dataset.sql:
             dataset.source_file = self.get_absolute_source_file(dataset.source_file)
         self.connector.table_name = dataset.name
         self.active_dataset = dataset
