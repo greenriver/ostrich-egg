@@ -715,10 +715,11 @@ class Engine:
     def get_absolute_source_file(self, file_path: str):
         if self.output_directory:
             file_path = os.path.join(self.output_directory, os.path.basename(file_path))
-        if self.output_bucket:
+        if self.output_bucket and not file_path.startswith("s3://"):
             key = file_path
             if self.output_prefix:
-                key = f"{self.output_prefix}/{key}"
+                if not key.startswith(f"{self.output_prefix}/"):
+                    key = f"{self.output_prefix}/{key}"
                 file_path = key_as_s3_uri(bucket=self.output_bucket, key=key)
         return file_path
 

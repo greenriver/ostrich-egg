@@ -1,12 +1,10 @@
 import os
 from uuid import uuid4
 
-import boto3
-from moto import mock_aws
 from moto.server import ThreadedMotoServer
 import pytest
 
-from conftest import TEST_DIRECTORY
+from conftest import TEST_DIRECTORY, TEST_S3_PARAMS
 from engine import Engine
 from config import (
     Config,
@@ -62,29 +60,7 @@ POPULATION_METRIC = Metric(
     alias="population",
 )
 
-MOCK_ENDPOINT = "test"
-TEST_S3_PARAMS = {
-    "use_ssl": False,
-    "url_style": "path",
-    "use_credential_chain": True,
-}
-
 TEST_BUCKET_NAME = "test-bucket"
-
-os.environ["MOTO_S3_CUSTOM_ENDPOINTS"] = f"http://{MOCK_ENDPOINT}"
-os.environ["S3_IGNORE_SUBDOMAIN_BUCKETNAME"] = "true"
-
-
-@pytest.fixture()
-def mocked_s3_res(moto_server):
-    with mock_aws():
-        yield boto3.resource("s3", endpoint_url=moto_server)
-
-
-@pytest.fixture()
-def mocked_s3_client(moto_server):
-    with mock_aws():
-        yield boto3.client("s3", endpoint_url=moto_server)
 
 
 @pytest.fixture(autouse=True)
