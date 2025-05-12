@@ -792,7 +792,7 @@ class Engine:
             # load it in the default manner without a specified table name.
             self.connector.load_source_table()
         logger.info("Running initial aggregation")
-        self.run_aggregation(table_name=table_name, initial=index == 0)
+        self.run_aggregation(table_name=table_name, initial=True)
         logger.info("Running suppression strategies")
         self.process_suppression_strategies()
         logger.info("Producing anonymized dataset")
