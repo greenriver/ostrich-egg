@@ -60,6 +60,7 @@ SUBSEQUENT_POPULATION_METRIC = Metric(
     is_initial=False,
 )
 
+
 class TestInitialMetrics:
 
     @pytest.fixture()
@@ -67,7 +68,10 @@ class TestInitialMetrics:
         return Config(
             datasource=DataSource(
                 connection_type="file",
-                parameters={"file_path": test_file, "output_directory": DATA_OUTPUTS_DIRECTORY},
+                parameters={
+                    "file_path": test_file,
+                    "output_directory": DATA_OUTPUTS_DIRECTORY,
+                },
             ),
             datasets=[
                 DatasetConfig(
@@ -78,7 +82,9 @@ class TestInitialMetrics:
                     sql=generate_sql,
                     suppression_strategies=[
                         MarkRedacted(
-                            parameters=MarkRedactedParameters(redacted_dimension="zip_code")
+                            parameters=MarkRedactedParameters(
+                                redacted_dimension="zip_code"
+                            )
                         )
                     ],
                 ),
@@ -90,7 +96,10 @@ class TestInitialMetrics:
         return Config(
             datasource=DataSource(
                 connection_type="file",
-                parameters={"file_path": test_file, "output_directory": DATA_OUTPUTS_DIRECTORY},
+                parameters={
+                    "file_path": test_file,
+                    "output_directory": DATA_OUTPUTS_DIRECTORY,
+                },
             ),
             redaction_expression=REDACTION_EXPRESSION,
             datasets=[
@@ -98,12 +107,19 @@ class TestInitialMetrics:
                     name="base",
                     dimensions=DIMENSIONS,
                     unit_level_id="id",
-                    metrics=[INITIAL_INCIDENCE_METRIC, SUBSEQUENT_INCIDENCE_METRIC, INITIAL_POPULATION_METRIC, SUBSEQUENT_POPULATION_METRIC],
+                    metrics=[
+                        INITIAL_INCIDENCE_METRIC,
+                        SUBSEQUENT_INCIDENCE_METRIC,
+                        INITIAL_POPULATION_METRIC,
+                        SUBSEQUENT_POPULATION_METRIC,
+                    ],
                     output_file="implicit_metric.csv",
                     sql=generate_sql,
                     suppression_strategies=[
                         MarkRedacted(
-                            parameters=MarkRedactedParameters(redacted_dimension="zip_code")
+                            parameters=MarkRedactedParameters(
+                                redacted_dimension="zip_code"
+                            )
                         )
                     ],
                 ),
@@ -125,8 +141,32 @@ class TestInitialMetrics:
         """
         engine = Engine(config=explicit_config)
         engine.run()
-        output = engine.db.read_csv(engine.active_dataset.output_file)
+        output = engine.db.read_csv(engine.active_dataset.output_file)  # noqa: F841
         results = [r[0] for r in engine.db.sql("select output from output").fetchall()]
-        assert {'incidence': 20, 'population': 4000, 'month': '2025-01', 'county': 'A', 'zip_code': 23456, 'is_anonymous': True, 'is_redacted': True} in results
-        assert {'incidence': 10, 'population': 3000, 'month': '2025-01', 'county': 'A', 'zip_code': 12345, 'is_anonymous': False, 'is_redacted': True} in results
-        assert {'incidence': 21, 'population': 4000, 'month': '2025-01', 'county': 'B', 'zip_code': 23456, 'is_anonymous': True, 'is_redacted': False} in results
+        assert {
+            "incidence": 20,
+            "population": 4000,
+            "month": "2025-01",
+            "county": "A",
+            "zip_code": 23456,
+            "is_anonymous": True,
+            "is_redacted": True,
+        } in results
+        assert {
+            "incidence": 10,
+            "population": 3000,
+            "month": "2025-01",
+            "county": "A",
+            "zip_code": 12345,
+            "is_anonymous": False,
+            "is_redacted": True,
+        } in results
+        assert {
+            "incidence": 21,
+            "population": 4000,
+            "month": "2025-01",
+            "county": "B",
+            "zip_code": 23456,
+            "is_anonymous": True,
+            "is_redacted": False,
+        } in results

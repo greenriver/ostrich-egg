@@ -189,8 +189,7 @@ class Metric(BaseModel):
     )
     is_subsequent: bool = Field(
         description="Whether this metric is a subsequent metric that runs after the initial metric. It is by default the opposite of is_initial; a metric could be the same for both, especially if already a a sum or average or any_value aggregation.",
-        default_factory=lambda data: not data['is_initial'],
-
+        default_factory=lambda data: not data["is_initial"],
     )
 
     def render_as_sql_expression(self, include_alias=False):
@@ -218,7 +217,7 @@ class Metric(BaseModel):
 
     def should_include_in_initial_state(self, initial: bool = False):
         initial_conditions_match = self.is_initial == initial
-        counter_condition_does_not_exclude = (not initial and self.is_subsequent)
+        counter_condition_does_not_exclude = not initial and self.is_subsequent
         return initial_conditions_match or counter_condition_does_not_exclude
 
 

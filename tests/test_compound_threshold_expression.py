@@ -100,11 +100,13 @@ def compound_redaction_expression_config() -> Config:
                         aggregation=Aggregations.SUM,
                         column="incidence",
                         alias="incidence",
+                        is_initial=True,
                     ),
                     Metric(
                         aggregation=Aggregations.SUM,
                         column="population",
                         alias="population",
+                        is_initial=True,
                     ),
                 ],
                 suppression_strategies=[

@@ -103,7 +103,6 @@ class Engine:
         self.active_dimensions = dataset.dimensions
         self.removed_dimensions = []
 
-
     @property
     def metrics(self):
         return self.__metrics
@@ -122,29 +121,48 @@ class Engine:
             if self.active_dataset.unit_level_id:
                 aggregation = Aggregations.COUNT_DISTINCT
                 column = self.active_dataset.unit_level_id
-            metrics = [
-                Metric(aggregation=aggregation, column=column, is_initial=True)]
+            metrics = [Metric(aggregation=aggregation, column=column, is_initial=True)]
         for index, metric in enumerate(metrics):
             metric.alias = metric.alias or f"m_{index}"
         if len(metrics) == 1 and metrics[0].is_initial:
-            metrics.append(Metric(aggregation=Aggregations.SUM, column=metrics[0].alias, is_initial=False, alias=metrics[0].alias))
-        self.__metrics = metrics
+            metrics.append(
+                Metric(
+                    aggregation=Aggregations.SUM,
+                    column=metrics[0].alias,
+                    is_initial=False,
+                    alias=metrics[0].alias,
+                )
+            )
+        initial_metrics = [metric for metric in metrics if metric.is_initial]
+        subsequent_metrics = [metric for metric in metrics if not metric.is_initial]
+
+        if not initial_metrics:
+            logger.warning("No initial metrics were specified, using subsequent metrics as initial metrics.")
+            for metric in subsequent_metrics:
+                metric.is_initial = True
+        if not subsequent_metrics:
+            logger.warning("No subsequent metrics were specified, using initial metrics as subsequent metrics.")
+            for metric in initial_metrics:
+                metric.is_subsequent = True
+        self.__metrics = initial_metrics + subsequent_metrics
 
     def get_metric_aliases(self, initial: bool = False) -> dict:
         """
         Return column-name: metric-name mapping.
         """
         metric_aliases = {
-            metric.alias: metric.render_as_sql_expression() for metric in self.metrics if metric.should_include_in_initial_state(initial=initial)
+            metric.alias: metric.render_as_sql_expression()
+            for metric in self.metrics
+            if metric.should_include_in_initial_state(initial=initial)
         }
         return metric_aliases
 
     def get_metric_sql_list(self, initial: bool = False) -> list:
-            metric_sql_list =  [
-                f"{metric} as {identifier(alias)}"
-                for alias, metric in self.get_metric_aliases(initial=initial).items()
-            ]
-            return metric_sql_list
+        metric_sql_list = [
+            f"{metric} as {identifier(alias)}"
+            for alias, metric in self.get_metric_aliases(initial=initial).items()
+        ]
+        return metric_sql_list
 
     @property
     def redaction_expression(self) -> str:
@@ -248,7 +266,9 @@ class Engine:
             )
         return whens
 
-    def get_wrapper_metrics_pass_expression_from_redaction_expression(self, initial: bool = False) -> str:
+    def get_wrapper_metrics_pass_expression_from_redaction_expression(
+        self, initial: bool = False
+    ) -> str:
         """
         Construct the expression that determines if the row itself passes privacy thresholds
         It evaluates the redaction expression and returns a single boolean for whether the row in question passes.
@@ -655,7 +675,9 @@ class Engine:
                 page_redactions = (
                     self.get_dimension_values_to_redact_with_latency_check(
                         dimension=dimension_to_use,
-                        metric_name=list(self.get_metric_aliases(initial=False).keys())[0],
+                        metric_name=list(self.get_metric_aliases(initial=False).keys())[
+                            0
+                        ],
                     )
                 )
                 redactions.extend(page_redactions)
