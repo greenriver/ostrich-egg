@@ -183,6 +183,15 @@ class Metric(BaseModel):
         description="A literal expression to use for the metric. Let's a user create advanced custom metrics",
         default=None,
     )
+    is_initial: bool = Field(
+        description="Whether this metric is only an initial metric against the base dataset to produce the initial aggregation before running latent checks. It is by default false.",
+        default=False,
+    )
+    is_subsequent: bool = Field(
+        description="Whether this metric is a subsequent metric that runs after the initial metric. It is by default the opposite of is_initial; a metric could be the same for both, especially if already a a sum or average or any_value aggregation.",
+        default_factory=lambda data: not data['is_initial'],
+
+    )
 
     def render_as_sql_expression(self, include_alias=False):
         if self.expression:
@@ -207,6 +216,11 @@ class Metric(BaseModel):
             column_expression = f"{self.aggregation}({column_identifier})"
         return f"{column_expression}{alias_expression if include_alias else ''}"
 
+    def should_include_in_initial_state(self, initial: bool = False):
+        initial_conditions_match = self.is_initial == initial
+        counter_condition_does_not_exclude = (not initial and self.is_subsequent)
+        return initial_conditions_match or counter_condition_does_not_exclude
+
 
 class Dataset(BaseModel):
 
@@ -226,13 +240,19 @@ class Dataset(BaseModel):
         Union[str, None],
         Field(
             description="The column name for the unit-level-id, e.g., not-aggregate but identifies a unique record. This will be ignored in calculations except for count(distinct unit-level-id) and the metrics will group by the dimensions.",
-            alias="unit-level-id",
+            alias=AliasChoices("unit-level-id", "unit_level_id"),
+        ),
+    ] = None
+    initial_metrics: Annotated[
+        Optional[Union[List[Metric], None]],
+        Field(
+            description="An initial set of metrics that will be produced from the first aggregation of the dataset; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id)."
         ),
     ] = None
     metrics: Annotated[
         Union[List[Metric], None],
         Field(
-            description="The metrics that will be aggregated; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id)."
+            description="The metrics that will be produced when aggregation is run. If not specified and no unit-level-id, will use count(*). If unit-level-id, will use count(distinct unit-level-id). If only count(*) is specified, a metric will be added to the engine to run subsequently to sum the count metric."
         ),
     ] = None
     sql: Optional[

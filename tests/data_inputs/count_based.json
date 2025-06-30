@@ -1,0 +1,27 @@
+[
+    {
+        "count": 10,
+        "month": "2025-01",
+        "county": "A",
+        "zip_code": "12345",
+        "zip_code_population": 3000,
+        "purpose": "Provide 1 small cell that will force latent suppression."
+    },
+    {
+        "count": 20,
+        "month": "2025-01",
+        "county": "A",
+        "zip_code": "23456",
+        "zip_code_population": 4000,
+        "demographics": "Profile-A",
+        "purpose": "Be latently suppressed."
+    },
+    {
+        "count": 21,
+        "month": "2025-01",
+        "county": "B",
+        "zip_code": "23456",
+        "zip_code_population": 4000,
+        "purpose": "Be displayed, not suppressed."
+    }
+]
