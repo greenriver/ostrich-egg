@@ -584,7 +584,12 @@ class Engine:
 
             within_peer_index += 1
         if values_meeting_redaction_criteria:
-            value_string = ", ".join(values_meeting_redaction_criteria)
+            value_string = ", ".join(
+                [
+                    "<null>" if not value else value
+                    for value in values_meeting_redaction_criteria
+                ]
+            )
 
             reason = f"value{'s' if len(values_meeting_redaction_criteria) > 1 else ''} {value_string} meet{'s' if len(values_meeting_redaction_criteria) == 1 else ''} redaction criteria\n {self.redaction_expression}"
         peer_result = (
