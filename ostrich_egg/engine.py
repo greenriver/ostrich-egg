@@ -413,6 +413,7 @@ class Engine:
         # this variable goes across peers
         # it will be set to True if a small cell needs a neighbor to be suppressed.
         must_anonymize_next = False
+        reason = None
         for peer_id in peer_ids:
             # identify the peers within this aggregation that might need to be latently redacted
             peer_value_sql = f"""
@@ -447,8 +448,13 @@ class Engine:
                     peer_values=peer_values,
                     masking_value=masking_value,
                     must_anonymize_next=must_anonymize_next,
+                    reason=reason,
                 )
             )
+            if must_anonymize_next:
+                reason = peer_result[-1].reason
+            else:
+                reason = None
             final_result.extend(peer_result)
 
         return final_result
@@ -460,6 +466,7 @@ class Engine:
         peer_values: dict,
         must_anonymize_next: bool = False,
         masking_value: str = DEFAULT_MASKING_VALUE,
+        reason: str | None = None,
     ) -> tuple[list[RedactionIterationResult], bool]:
         """
         Main engine for latent anonymization
@@ -476,7 +483,6 @@ class Engine:
         anonymized = False
         row_count, *_ = this_peer_relation.count("*").fetchone()
         within_peer_index = 0
-        reason = None
         values_meeting_redaction_criteria = []
         while within_peer_index < row_count:
             local_result = this_peer_relation.fetchone()

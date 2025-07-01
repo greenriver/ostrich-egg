@@ -113,7 +113,7 @@ class TestInitialMetrics:
                         INITIAL_POPULATION_METRIC,
                         SUBSEQUENT_POPULATION_METRIC,
                     ],
-                    output_file="implicit_metric.csv",
+                    output_file="explicit_metric.csv",
                     sql=generate_sql,
                     suppression_strategies=[
                         MarkRedacted(
