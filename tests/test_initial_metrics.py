@@ -151,6 +151,7 @@ class TestInitialMetrics:
             "zip_code": 23456,
             "is_anonymous": True,
             "is_redacted": True,
+            "redaction_group": '{"peer_group":{"month":"2025-01","county":"A","zip_code":"23456"},"redacted_zip_code":["12345","23456"],"reason":"value 12345 meets redaction criteria\\n case\\n    when incidence < 11 and population >= 2500 and population < 20000 then true\\n    when population >= 20000 then false\\n    when population < 2500 then true\\n    else false\\nend\\n"}',
         } in results
         assert {
             "incidence": 10,
@@ -160,6 +161,7 @@ class TestInitialMetrics:
             "zip_code": 12345,
             "is_anonymous": False,
             "is_redacted": True,
+            "redaction_group": '{"peer_group":{"month":"2025-01","county":"A","zip_code":"12345"},"redacted_zip_code":["12345","23456"],"reason":"value 12345 meets redaction criteria\\n case\\n    when incidence < 11 and population >= 2500 and population < 20000 then true\\n    when population >= 20000 then false\\n    when population < 2500 then true\\n    else false\\nend\\n"}',
         } in results
         assert {
             "incidence": 21,
@@ -169,4 +171,5 @@ class TestInitialMetrics:
             "zip_code": 23456,
             "is_anonymous": True,
             "is_redacted": False,
+            "redaction_group": None,
         } in results

@@ -50,7 +50,7 @@ SqlExpressionObject = namedtuple(
 
 RedactionIterationResult = namedtuple(
     typename="RedactionIterationResult",
-    field_names=["other_dimension_values", "remapped_lookup"],
+    field_names=["other_dimension_values", "remapped_lookup", "reason"],
 )
 
 
@@ -137,11 +137,15 @@ class Engine:
         subsequent_metrics = [metric for metric in metrics if not metric.is_initial]
 
         if not initial_metrics:
-            logger.warning("No initial metrics were specified, using subsequent metrics as initial metrics.")
+            logger.warning(
+                "No initial metrics were specified, using subsequent metrics as initial metrics."
+            )
             for metric in subsequent_metrics:
                 metric.is_initial = True
         if not subsequent_metrics:
-            logger.warning("No subsequent metrics were specified, using initial metrics as subsequent metrics.")
+            logger.warning(
+                "No subsequent metrics were specified, using initial metrics as subsequent metrics."
+            )
             for metric in initial_metrics:
                 metric.is_subsequent = True
         self.__metrics = initial_metrics + subsequent_metrics
@@ -472,6 +476,8 @@ class Engine:
         anonymized = False
         row_count, *_ = this_peer_relation.count("*").fetchone()
         within_peer_index = 0
+        reason = None
+        values_meeting_redaction_criteria = []
         while within_peer_index < row_count:
             local_result = this_peer_relation.fetchone()
             if not local_result:
@@ -531,9 +537,11 @@ class Engine:
                 """
                 Base case small-cell for suppression.
                 """
+
                 logger.debug(
-                    f"Redacting {dimension_value} as it is below the threshold of {self.threshold}."
+                    f"{dimension_value} meets redaction criteria\n {self.redaction_expression}"
                 )
+                values_meeting_redaction_criteria.append(dimension_value)
                 values_to_mask.append(dimension_value)
                 must_anonymize_next = True
 
@@ -567,22 +575,18 @@ class Engine:
             elif values_to_mask and not anonymized:
                 """
                 This is the base case for latent suppression in which the value itself is fine but we must suppress to prevent latent revelation.
+                We will check the next iteration if the redaction leaves us with exclusively sufficiently large cells and no additional revelation through subtraction.
                 """
                 logger.debug(
                     f"Redacting {dimension_value} as it would latently reveal an unacceptable metric value through subtraction."
                 )
                 values_to_mask.append(dimension_value)
-                seen_values.append(dimension_value)
-
-            elif must_anonymize_next and not value_is_fine:
-                # a small value was seen by previous peer, the next value must be anonymized irrespective of the rest of the peer size.
-                logger.debug(
-                    f"Redacting {dimension_value} as it would latently reveal an unacceptable metric value through subtraction."
-                )
-                values_to_mask.append(dimension_value)
-                seen_values.append(dimension_value)
 
             within_peer_index += 1
+        if values_meeting_redaction_criteria:
+            value_string = ", ".join(values_meeting_redaction_criteria)
+
+            reason = f"value{'s' if len(values_meeting_redaction_criteria) > 1 else ''} {value_string} meet{'s' if len(values_meeting_redaction_criteria) == 1 else ''} redaction criteria\n {self.redaction_expression}"
         peer_result = (
             [
                 RedactionIterationResult(
@@ -591,6 +595,7 @@ class Engine:
                         dimension_value: masking_value
                         for dimension_value in values_to_mask
                     },
+                    reason=reason,
                 )
             ]
             if values_to_mask
@@ -689,13 +694,20 @@ class Engine:
             )
         alter_sql = """
         alter table output
-        add column "is_redacted" boolean default false
+          add column "is_redacted" boolean default false;
+        alter table output
+          add column "redaction_group" json;
         """
         self.connector.duckdb_connection.execute(alter_sql)
         self.connector.duckdb_connection.execute(
             "update output set is_redacted = true where not is_anonymous"
         )
         for redaction in redactions:
+            redaction_group = {
+                "peer_group": redaction.other_dimension_values,
+                f"redacted_{dimension_to_use}": list(redaction.remapped_lookup.keys()),
+                "reason": redaction.reason,
+            }
             for old, new in redaction.remapped_lookup.items():
                 redaction.other_dimension_values[dimension_to_use] = old
                 filters = dict_to_filter_expressions(
@@ -704,10 +716,13 @@ class Engine:
                 condition = merge_conditions(filters)
                 update_sql = f"""
                 update output
-                set "is_redacted" = true
+                set "is_redacted" = true,
+                "redaction_group" = $redaction_group
                 where {condition}
                 """
-                self.connector.duckdb_connection.execute(query=update_sql)
+                self.connector.duckdb_connection.execute(
+                    query=update_sql, parameters={"redaction_group": redaction_group}
+                )
         # Use this new table instead of the source data.
         self.final_source_table = "output"
 
