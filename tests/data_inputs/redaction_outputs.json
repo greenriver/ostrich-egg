@@ -1,50 +1,18 @@
 [
   {
-    "incidence": 200,
-    "population_value": 2000,
-    "purpose": "force suppression of within peer group",
-    "expected_to_be_redacted": true,
+    "incidence": 30,
+    "population_value": 3000,
+    "purpose": "Should not be suppressed",
+    "expected_to_be_redacted": false,
     "month": "1900-01-01",
     "county": "county-sussex",
-    "municipality": "millville",
-    "zip_code": "zip-code-19967",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": {
-      "month": "1900-01-01",
-      "county": "county-sussex",
-      "municipality": "millville"
-    },
-    "redacted_peers": {
-      "zip_code": [
-        "zip-code-19967",
-        "zip-code-19970"
-      ]
-    },
-    "redaction_reason": "value zip-code-19967 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
-  },
-  {
-    "incidence": 8,
-    "population_value": 7000,
-    "purpose": "get suppressed",
-    "expected_to_be_redacted": true,
-    "month": "1900-01-01",
-    "county": "county-sussex",
-    "municipality": "greenwood",
-    "zip_code": "zip-code-19950",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": {
-      "month": "1900-01-01",
-      "county": "county-sussex",
-      "municipality": "greenwood"
-    },
-    "redacted_peers": {
-      "zip_code": [
-        "zip-code-19950"
-      ]
-    },
-    "redaction_reason": "value zip-code-19950 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "municipality": null,
+    "zip_code": "zip-code-19941",
+    "is_anonymous": true,
+    "is_redacted": false,
+    "peer_group": null,
+    "redacted_peers": null,
+    "redaction_reason": null
   },
   {
     "incidence": 1,
@@ -66,11 +34,10 @@
       "zip_code": [
         "zip-code-19943",
         "zip-code-19804",
-        "zip-code-19931",
-        null
+        "zip-code-19931"
       ]
     },
-    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931, <null> meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
     "incidence": 5,
@@ -129,46 +96,9 @@
     "zip_code": null,
     "is_anonymous": false,
     "is_redacted": true,
-    "peer_group": {
-      "month": "1900-01-01",
-      "county": "county-sussex",
-      "municipality": null,
-      "zip_code": "zip-code-19931"
-    },
-    "redacted_peers": {
-      "zip_code": [
-        "zip-code-19943",
-        "zip-code-19804",
-        "zip-code-19931",
-        null
-      ]
-    },
-    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931, <null> meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
-  },
-  {
-    "incidence": 40,
-    "population_value": 7000,
-    "purpose": "get suppressed",
-    "expected_to_be_redacted": true,
-    "month": "1900-01-01",
-    "county": "county-sussex",
-    "municipality": "millville",
-    "zip_code": "zip-code-19970",
-    "is_anonymous": true,
-    "is_redacted": true,
-    "peer_group": {
-      "month": "1900-01-01",
-      "county": "county-sussex",
-      "municipality": "millville",
-      "zip_code": "zip-code-19967"
-    },
-    "redacted_peers": {
-      "zip_code": [
-        "zip-code-19967",
-        "zip-code-19970"
-      ]
-    },
-    "redaction_reason": "value zip-code-19967 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "peer_group": null,
+    "redacted_peers": null,
+    "redaction_reason": null
   },
   {
     "incidence": 30,
@@ -214,11 +144,10 @@
       "zip_code": [
         "zip-code-19943",
         "zip-code-19804",
-        "zip-code-19931",
-        null
+        "zip-code-19931"
       ]
     },
-    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931, <null> meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
     "incidence": 10,
@@ -241,25 +170,81 @@
       "zip_code": [
         "zip-code-19943",
         "zip-code-19804",
-        "zip-code-19931",
-        null
+        "zip-code-19931"
       ]
     },
-    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931, <null> meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "redaction_reason": "values zip-code-19943, zip-code-19804, zip-code-19931 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
-    "incidence": 30,
-    "population_value": 3000,
-    "purpose": "Should not be suppressed",
-    "expected_to_be_redacted": false,
+    "incidence": 200,
+    "population_value": 2000,
+    "purpose": "force suppression of within peer group",
+    "expected_to_be_redacted": true,
     "month": "1900-01-01",
     "county": "county-sussex",
-    "municipality": null,
-    "zip_code": "zip-code-19941",
+    "municipality": "millville",
+    "zip_code": "zip-code-19967",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": {
+      "month": "1900-01-01",
+      "county": "county-sussex",
+      "municipality": "millville"
+    },
+    "redacted_peers": {
+      "zip_code": [
+        "zip-code-19967",
+        "zip-code-19970"
+      ]
+    },
+    "redaction_reason": "value zip-code-19967 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+  },
+  {
+    "incidence": 8,
+    "population_value": 7000,
+    "purpose": "get suppressed",
+    "expected_to_be_redacted": true,
+    "month": "1900-01-01",
+    "county": "county-sussex",
+    "municipality": "greenwood",
+    "zip_code": "zip-code-19950",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": {
+      "month": "1900-01-01",
+      "county": "county-sussex",
+      "municipality": "greenwood"
+    },
+    "redacted_peers": {
+      "zip_code": [
+        "zip-code-19950"
+      ]
+    },
+    "redaction_reason": "value zip-code-19950 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+  },
+  {
+    "incidence": 40,
+    "population_value": 7000,
+    "purpose": "get suppressed",
+    "expected_to_be_redacted": true,
+    "month": "1900-01-01",
+    "county": "county-sussex",
+    "municipality": "millville",
+    "zip_code": "zip-code-19970",
     "is_anonymous": true,
-    "is_redacted": false,
-    "peer_group": null,
-    "redacted_peers": null,
-    "redaction_reason": null
+    "is_redacted": true,
+    "peer_group": {
+      "month": "1900-01-01",
+      "county": "county-sussex",
+      "municipality": "millville",
+      "zip_code": "zip-code-19967"
+    },
+    "redacted_peers": {
+      "zip_code": [
+        "zip-code-19967",
+        "zip-code-19970"
+      ]
+    },
+    "redaction_reason": "value zip-code-19967 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   }
 ]

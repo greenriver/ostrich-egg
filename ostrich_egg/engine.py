@@ -575,7 +575,7 @@ class Engine:
         if values_meeting_redaction_criteria:
             value_string = ", ".join(
                 [
-                    "<null>" if not value else value
+                    "<null>" if value is None else str(value)
                     for value in values_meeting_redaction_criteria
                 ]
             )
