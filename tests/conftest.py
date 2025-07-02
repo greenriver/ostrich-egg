@@ -17,6 +17,9 @@ sys.path.insert(1, SRC_DIRECTORY)
 sys.path.insert(2, TEST_DIRECTORY)
 
 
+DATA_INPUTS_DIRECTORY = os.path.join(TEST_DIRECTORY, "data_inputs")
+DATA_OUTPUTS_DIRECTORY = os.path.join(TEST_DIRECTORY, "data_outputs")
+
 MOCK_ENDPOINT = "test"
 TEST_S3_PARAMS = {
     "use_ssl": False,

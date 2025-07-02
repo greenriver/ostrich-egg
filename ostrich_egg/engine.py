@@ -98,10 +98,10 @@ class Engine:
 
     @active_dataset.setter
     def active_dataset(self, dataset: DatasetConfig | None):
+        self.__active_dataset = dataset
         self.metrics = dataset.metrics
         self.active_dimensions = dataset.dimensions
         self.removed_dimensions = []
-        self.__active_dataset = dataset
 
     @property
     def metrics(self):
@@ -121,27 +121,48 @@ class Engine:
             if self.active_dataset.unit_level_id:
                 aggregation = Aggregations.COUNT_DISTINCT
                 column = self.active_dataset.unit_level_id
-            metrics = [Metric(aggregation=aggregation, column=column)]
+            metrics = [Metric(aggregation=aggregation, column=column, is_initial=True)]
         for index, metric in enumerate(metrics):
             metric.alias = metric.alias or f"m_{index}"
-        self.__metrics = metrics
+        if len(metrics) == 1 and metrics[0].is_initial:
+            metrics.append(
+                Metric(
+                    aggregation=Aggregations.SUM,
+                    column=metrics[0].alias,
+                    is_initial=False,
+                    alias=metrics[0].alias,
+                )
+            )
+        initial_metrics = [metric for metric in metrics if metric.is_initial]
+        subsequent_metrics = [metric for metric in metrics if not metric.is_initial]
 
-    @property
-    def metric_aliases(self) -> dict:
+        if not initial_metrics:
+            logger.warning("No initial metrics were specified, using subsequent metrics as initial metrics.")
+            for metric in subsequent_metrics:
+                metric.is_initial = True
+        if not subsequent_metrics:
+            logger.warning("No subsequent metrics were specified, using initial metrics as subsequent metrics.")
+            for metric in initial_metrics:
+                metric.is_subsequent = True
+        self.__metrics = initial_metrics + subsequent_metrics
+
+    def get_metric_aliases(self, initial: bool = False) -> dict:
         """
         Return column-name: metric-name mapping.
         """
         metric_aliases = {
-            metric.alias: metric.render_as_sql_expression() for metric in self.metrics
+            metric.alias: metric.render_as_sql_expression()
+            for metric in self.metrics
+            if metric.should_include_in_initial_state(initial=initial)
         }
         return metric_aliases
 
-    @property
-    def metric_sql_list(self) -> list:
-        return [
+    def get_metric_sql_list(self, initial: bool = False) -> list:
+        metric_sql_list = [
             f"{metric} as {identifier(alias)}"
-            for alias, metric in self.metric_aliases.items()
+            for alias, metric in self.get_metric_aliases(initial=initial).items()
         ]
+        return metric_sql_list
 
     @property
     def redaction_expression(self) -> str:
@@ -245,7 +266,9 @@ class Engine:
             )
         return whens
 
-    def get_wrapper_metrics_pass_expression_from_redaction_expression(self) -> str:
+    def get_wrapper_metrics_pass_expression_from_redaction_expression(
+        self, initial: bool = False
+    ) -> str:
         """
         Construct the expression that determines if the row itself passes privacy thresholds
         It evaluates the redaction expression and returns a single boolean for whether the row in question passes.
@@ -257,7 +280,7 @@ class Engine:
         {%- endfor %}
         """
         context = {
-            "metric_aliases": self.metric_aliases,
+            "metric_aliases": self.get_metric_aliases(initial=initial),
             "allow_zeroes": self.allow_zeros,
             "threshold": self.threshold,
         }
@@ -266,14 +289,14 @@ class Engine:
         return check_for_did_not_pass
 
     def get_rendered_aggregation_query(
-        self, dimensions: list = None, table_name: str = None
+        self, dimensions: list = None, table_name: str = None, initial: bool = False
     ) -> str:
         dimensions = dimensions or self.active_dimensions
         dimensions_as_sql_object = self.dimensions_as_sql_expressions(
             dimensions=dimensions
         )
         context = {
-            "metric_list": self.metric_sql_list,
+            "metric_list": self.get_metric_sql_list(initial=initial),
             "dimensions": dimensions_as_sql_object,
             "table_name": table_name or self.connector.table_name,
             # "wrapper_list_check": self.get_wrapper_metrics_pass_expression_from_redaction_expression(),
@@ -305,7 +328,7 @@ class Engine:
         """
         dimensions = dimensions or self.active_dimensions
         sql = self.get_rendered_aggregation_query(
-            dimensions=dimensions, table_name=table_name
+            dimensions=dimensions, table_name=table_name, initial=initial
         )
         __result__ = self.connector.duckdb_connection.sql(sql)
         if initial:
@@ -357,8 +380,8 @@ class Engine:
         sql_expressions = self.dimensions_as_sql_expressions(
             dimensions=dimensions_to_hold_constant
         )
-        metrics_sql = ", ".join(self.metric_sql_list)
-        metric_sort = ", ".join(self.metric_aliases.keys())
+        metrics_sql = ", ".join(self.get_metric_sql_list(initial=False))
+        metric_sort = ", ".join(self.get_metric_aliases(initial=False).keys())
         anonymous_metric = "count(*) filter (where not is_anonymous) = 0"
         dimension_value_count_sql = f"""
         select dense_rank() over(order by {sql_expressions.aliases}) as peer_id , *
@@ -409,7 +432,7 @@ class Engine:
                 .select(
                     DIMENSION_VALUE_COLUMN,
                     IS_ANONYMOUS_COLUMN,
-                    *self.metric_aliases.keys(),
+                    *self.get_metric_aliases(initial=False).keys(),
                 )
                 .order(metric_sort)
             )
@@ -471,7 +494,7 @@ class Engine:
         """
                 )
                 sql = working_subtotal_query_template.render(
-                    metric_list=self.metric_sql_list,
+                    metric_list=self.get_metric_sql_list(initial=False),
                     anonymous_expression=self.anonymous_expression,
                     is_anonymous=IS_ANONYMOUS_COLUMN,
                 )
@@ -652,7 +675,9 @@ class Engine:
                 page_redactions = (
                     self.get_dimension_values_to_redact_with_latency_check(
                         dimension=dimension_to_use,
-                        metric_name=list(self.metric_aliases.keys())[0],
+                        metric_name=list(self.get_metric_aliases(initial=False).keys())[
+                            0
+                        ],
                     )
                 )
                 redactions.extend(page_redactions)
@@ -660,7 +685,7 @@ class Engine:
             self.connector.duckdb_connection.register("result", result_table)
             redactions = self.get_dimension_values_to_redact_with_latency_check(
                 dimension=dimension_to_use,
-                metric_name=list(self.metric_aliases.keys())[0],
+                metric_name=list(self.get_metric_aliases(initial=False).keys())[0],
             )
         alter_sql = """
         alter table output
