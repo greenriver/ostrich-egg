@@ -87,6 +87,7 @@ class TestRedactionReasons:
                 DatasetConfig(
                     name="base",
                     dimensions=DIMENSIONS,
+                    redaction_order_dimensions=["month", "county"],
                     metrics=[
                         INCIDENCE_METRIC,
                         POPULATION_METRIC,
@@ -134,6 +135,11 @@ class TestRedactionReasons:
             assert (
                 result["expected_to_be_redacted"] == result["is_redacted"]
             ), f"{result=}  was not what we expected"
+            if not (
+                (is_redacted and redaction_reason is not None)
+                or (not is_redacted and redaction_reason is None)
+            ):
+                print(f"{result=}")
             assert (is_redacted and redaction_reason is not None) or (
                 not is_redacted and redaction_reason is None
             ), f"{result=}  mismatches redaction flag and reason"

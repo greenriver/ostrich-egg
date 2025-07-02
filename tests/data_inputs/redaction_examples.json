@@ -2,51 +2,11 @@
     {
         "month": "1900-01-01",
         "county": "county-sussex",
-        "municipality": "bethel",
-        "zip_code": "zip-code-19931",
-        "incidence": 5,
-        "population_value": 300,
-        "expected_to_be_redacted": true,
-        "purpose": "Provide 1 small cell that will force latent suppression across peers. "
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": "ellendale",
-        "zip_code": "zip-code-19941",
-        "incidence": 30,
-        "population_value": 3000,
-        "expected_to_be_redacted": true,
-        "purpose": "Get Suppressed"
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": "frankford",
-        "zip_code": "zip-code-19945",
-        "incidence": 10,
-        "population_value": 8000,
-        "expected_to_be_redacted": true,
-        "purpose": "force suppression of within peer group"
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": "greenwood",
-        "zip_code": "zip-code-19950",
-        "incidence": 8,
-        "population_value": 7000,
-        "expected_to_be_redacted": true,
-        "purpose": "get suppressed"
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
         "municipality": "millville",
         "zip_code": "zip-code-19967",
         "incidence": 200,
         "population_value": 2000,
-        "purpose": "force suppression of within peer group",
+        "purpose": "force suppression within peer group (municipality millville)",
         "expected_to_be_redacted": true
     },
     {
@@ -56,17 +16,7 @@
         "zip_code": "zip-code-19970",
         "incidence": 40,
         "population_value": 7000,
-        "purpose": "get suppressed",
-        "expected_to_be_redacted": true
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": null,
-        "zip_code": "zip-code-19804",
-        "incidence": 1,
-        "population_value": 18000,
-        "purpose": "get suppressed",
+        "purpose": "get suppressed due to peer in millville",
         "expected_to_be_redacted": true
     },
     {
@@ -74,39 +24,49 @@
         "county": "county-sussex",
         "municipality": null,
         "zip_code": "zip-code-19931",
-        "incidence": 10,
+        "incidence": 4,
         "population_value": 300,
-        "purpose": "Should be suppressed",
-        "expected_to_be_redacted": true
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": null,
-        "zip_code": "zip-code-19941",
-        "incidence": 30,
-        "population_value": 3000,
-        "purpose": "Should not be suppressed",
-        "expected_to_be_redacted": false
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": null,
-        "zip_code": "zip-code-19943",
-        "incidence": 1,
-        "population_value": 12500,
-        "purpose": "should be suppressed",
-        "expected_to_be_redacted": true
-    },
-    {
-        "month": "1900-01-01",
-        "county": "county-sussex",
-        "municipality": null,
-        "zip_code": null,
-        "incidence": 100,
-        "population_value": null,
         "expected_to_be_redacted": true,
-        "purpose": "An unknown population value should be suppressed"
+        "purpose": "Provide a small cell that will accumulate latent suppression."
+    },
+    {
+        "month": "1900-01-01",
+        "county": "county-sussex",
+        "municipality": null,
+        "zip_code": "zip-code-19945",
+        "incidence": 6,
+        "population_value": 8000,
+        "expected_to_be_redacted": true,
+        "purpose": "accumulate latent suppression."
+    },
+    {
+        "month": "1900-01-01",
+        "county": "county-sussex",
+        "municipality": null,
+        "zip_code": "zip-code-20000",
+        "incidence": 60,
+        "population_value": 8000,
+        "expected_to_be_redacted": false,
+        "purpose": "This is a big cell in a largely suppressed peer group."
+    },
+    {
+        "incidence": 1,
+        "population_value": 8000,
+        "purpose": "force suppression of across peer groups",
+        "expected_to_be_redacted": true,
+        "month": "1900-02-01",
+        "county": "county-sussex",
+        "municipality": "frankford",
+        "zip_code": "zip-code-18945"
+    },
+    {
+        "incidence": 11,
+        "population_value": 8000,
+        "purpose": "get suppressed due to peer (frankford within the same month for the same county)",
+        "expected_to_be_redacted": true,
+        "month": "1900-02-01",
+        "county": "county-sussex",
+        "municipality": "ellendale",
+        "zip_code": "zip-code-19941"
     }
 ]

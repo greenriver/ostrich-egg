@@ -4,6 +4,7 @@ The actual "workhorse" part of the anonymization service. This is where the data
 
 from __future__ import annotations
 from collections import namedtuple
+from copy import deepcopy
 import os
 from typing import Dict, List
 
@@ -353,7 +354,6 @@ class Engine:
         self,
         dimension: str,
         masking_value=DEFAULT_MASKING_VALUE,
-        metric_name="m_0",
     ) -> List[RedactionIterationResult]:
         """
         The goal here is to flag which rows based on dimension value
@@ -381,6 +381,7 @@ class Engine:
         dimensions_to_hold_constant = [
             d for d in self.active_dimensions if d != dimension
         ]
+
         sql_expressions = self.dimensions_as_sql_expressions(
             dimensions=dimensions_to_hold_constant
         )
@@ -399,14 +400,27 @@ class Engine:
         identify_peers = self.connector.duckdb_connection.sql(dimension_value_count_sql)
         self.connector.duckdb_connection.register("identify_peers", identify_peers)
 
-        # process peers in smallest to largest order
+        # get smallest cells first.
+        # TODO: need to add a configuration to allow priority override columns;
+        # e.g., if we have a column for time, we might want to apply redactions in time order so that a future value doesn't suppress a past one that might have been revealed before.
+        # i
+        order_peers_by = f"{IS_ANONYMOUS_COLUMN}, {metric_sort}, peer_id"
+        if self.active_dataset.redaction_order_dimensions:
+            order_by_dimensions = ", ".join(
+                [
+                    d
+                    for d in self.active_dataset.redaction_order_dimensions
+                    if d in dimensions_to_hold_constant
+                ]
+            )
+            order_peers_by = f"{order_by_dimensions}, {order_peers_by}"
         peer_ids = [
             x[0]
             for x in self.connector.duckdb_connection.sql(
                 f"""
                 select distinct peer_id
                 from identify_peers
-                order by {IS_ANONYMOUS_COLUMN}, {metric_sort}, peer_id
+                order by {order_peers_by}
                 """
             ).fetchall()
         ]
@@ -423,7 +437,6 @@ class Engine:
                     from identify_peers
                     where peer_id = $peer_id
                     group by {sql_expressions.aliases}
-                    limit 1
                 ) as x
             """
             peer_values, *_ = self.connector.duckdb_connection.sql(
@@ -431,6 +444,8 @@ class Engine:
             ).fetchone()
 
             filter_by_peer = duckdb.ColumnExpression("peer_id").isin(peer_id)
+            # within a peer group, identify the smallest cells first.
+            # then, proceed sequentially in logical sort order to respect time and other deterministic column ordering.
             this_peer_relation = (
                 identify_peers.filter(filter_by_peer)
                 .select(
@@ -542,8 +557,7 @@ class Engine:
                 )
                 values_meeting_redaction_criteria.append(dimension_value)
                 values_to_mask.append(dimension_value)
-                if not sufficient_prior_redaction:
-                    must_anonymize_next = True
+                must_anonymize_next = True
 
             elif must_anonymize_next and value_is_fine:
                 """
@@ -563,9 +577,16 @@ class Engine:
                 )
                 values_to_mask.append(dimension_value)
 
+                # If this is the last value in the peer group and we are _now_ anonymized, we do not need to anonymize the next peer group.
+                # else we do not yet have sufficient prior redaction to prevent latent revelation, and we must suppress another cell.
+                if len(values_to_mask) >= 2 and (
+                    working_total_is_fine or value_is_fine
+                ):
+                    must_anonymize_next = False
+
             elif sufficient_prior_redaction and value_is_fine:
                 """
-                This is the exit condition from when redaction is required; there is enough small cell suppression
+                This is an exit condition from when redaction is required; there is enough small cell suppression
                 and the values in this peer group from this value forward are all fine ( it was sorted by value ascending).
                 """
                 must_anonymize_next = False
@@ -595,6 +616,8 @@ class Engine:
             if values_to_mask
             else []
         )
+        logger.info(f"{values_to_mask=}")
+        logger.info(f"{values_meeting_redaction_criteria=}")
         return peer_result, must_anonymize_next
 
     def update_the_dataset(
@@ -633,7 +656,6 @@ class Engine:
         redactions = self.get_dimension_values_to_redact_with_latency_check(
             dimension=params.redacted_dimension,
             masking_value=params.masking_value,
-            metric_name=self.metrics[0].alias,
         )
 
         self.redactions[params.redacted_dimension] = self.redactions.get(
@@ -673,10 +695,7 @@ class Engine:
                 self.connector.duckdb_connection.register("result", result)
                 page_redactions = (
                     self.get_dimension_values_to_redact_with_latency_check(
-                        dimension=dimension_to_use,
-                        metric_name=list(self.get_metric_aliases(initial=False).keys())[
-                            0
-                        ],
+                        dimension=dimension_to_use
                     )
                 )
                 redactions.extend(page_redactions)
@@ -684,7 +703,6 @@ class Engine:
             self.connector.duckdb_connection.register("result", result_table)
             redactions = self.get_dimension_values_to_redact_with_latency_check(
                 dimension=dimension_to_use,
-                metric_name=list(self.get_metric_aliases(initial=False).keys())[0],
             )
         alter_sql = """
         alter table output
@@ -702,7 +720,7 @@ class Engine:
         )
         for redaction in redactions:
             for old, new in redaction.remapped_lookup.items():
-                peer_group = redaction.other_dimension_values.copy()
+                peer_group = deepcopy(redaction.other_dimension_values)
                 redaction.other_dimension_values[dimension_to_use] = old
                 filters = dict_to_filter_expressions(
                     data=redaction.other_dimension_values
@@ -716,6 +734,10 @@ class Engine:
                 "redacted_peers" = $redacted_peers
                 where {condition}
                 """
+                if peer_group and not redaction.reason:
+                    logger.error(
+                        f"{redaction.other_dimension_values=} {redaction.remapped_lookup=}"
+                    )
                 self.connector.duckdb_connection.execute(
                     query=update_sql,
                     parameters={

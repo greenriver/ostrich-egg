@@ -266,6 +266,15 @@ class Dataset(BaseModel):
             ),
         ]
     ] = None
+    redaction_order_dimensions: Optional[
+        Annotated[
+            Union[List[str], None],
+            Field(
+                default_factory=list,
+                description="The dimensions to order the redaction by. If not specified, the dimensions will be ordered by the order they are specified in the dataset.",
+            ),
+        ]
+    ] = None
 
 
 class DataSource(BaseModel):
