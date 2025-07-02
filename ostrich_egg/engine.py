@@ -401,9 +401,7 @@ class Engine:
         self.connector.duckdb_connection.register("identify_peers", identify_peers)
 
         # get smallest cells first.
-        # TODO: need to add a configuration to allow priority override columns;
-        # e.g., if we have a column for time, we might want to apply redactions in time order so that a future value doesn't suppress a past one that might have been revealed before.
-        # i
+        # unless the user wants to prioritize say, time and/or larger geographic units or other semantically useful sort conditions.
         order_peers_by = f"{IS_ANONYMOUS_COLUMN}, {metric_sort}, peer_id"
         if self.active_dataset.redaction_order_dimensions:
             order_by_dimensions = ", ".join(
@@ -445,7 +443,6 @@ class Engine:
 
             filter_by_peer = duckdb.ColumnExpression("peer_id").isin(peer_id)
             # within a peer group, identify the smallest cells first.
-            # then, proceed sequentially in logical sort order to respect time and other deterministic column ordering.
             this_peer_relation = (
                 identify_peers.filter(filter_by_peer)
                 .select(
@@ -616,8 +613,6 @@ class Engine:
             if values_to_mask
             else []
         )
-        logger.info(f"{values_to_mask=}")
-        logger.info(f"{values_meeting_redaction_criteria=}")
         return peer_result, must_anonymize_next
 
     def update_the_dataset(
