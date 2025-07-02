@@ -56,8 +56,8 @@
         "zip_code": "zip-code-19970",
         "incidence": 40,
         "population_value": 7000,
-        "purpose": "don't get suppressed",
-        "expected_to_be_redacted": false
+        "purpose": "get suppressed",
+        "expected_to_be_redacted": true
     },
     {
         "month": "1900-01-01",

@@ -17,6 +17,8 @@ test_file = os.path.join(DATA_INPUTS_DIRECTORY, "redaction_examples.json")
 
 REDACTION_EXPRESSION = """\
 case
+    when population_value is null then true
+    when incidence = 0 then false
     when incidence < 11 and population_value >= 2500 and population_value < 20000 then true
     when population_value >= 20000 then false
     when population_value < 2500 then true
@@ -45,7 +47,7 @@ INCIDENCE_METRIC = Metric(
     is_subsequent=True,
 )
 POPULATION_METRIC = Metric(
-    aggregation=Aggregations.ANY_VALUE,
+    aggregation=Aggregations.MAX,
     column="population_value",
     alias="population_value",
     is_initial=True,
@@ -112,15 +114,26 @@ class TestRedactionReasons:
         engine = Engine(config=explicit_config)
         engine.run()
         output = engine.db.read_csv(engine.active_dataset.output_file)  # noqa: F841
-        results = [r[0] for r in engine.db.sql("select output from output").fetchall()]
-
+        results = [
+            r[0]
+            for r in engine.db.sql(
+                "select x from (select * replace( peer_group::json as peer_group, redacted_peers::json as redacted_peers) from output) x "
+            ).fetchall()
+        ]
+        for result in results:
+            if result["peer_group"] is not None:
+                result["peer_group"] = json.loads(result["peer_group"])
+            if result["redacted_peers"] is not None:
+                result["redacted_peers"] = json.loads(result["redacted_peers"])
         output_file = os.path.join(DATA_INPUTS_DIRECTORY, "redaction_outputs.json")
         with open(output_file, "w") as f:
             json.dump(results, f, indent=2, default=str)
         for result in results:
+            is_redacted = result["is_redacted"]
+            redaction_reason = result["redaction_reason"]
             assert (
                 result["expected_to_be_redacted"] == result["is_redacted"]
             ), f"{result=}  was not what we expected"
-            if result["is_redacted"] is True:
-                redacted_group = json.loads(result["redaction_group"])
-                assert redacted_group["reason"] is not None
+            assert (is_redacted and redaction_reason is not None) or (
+                not is_redacted and redaction_reason is None
+            ), f"{result=}  mismatches redaction flag and reason"

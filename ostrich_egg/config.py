@@ -143,11 +143,14 @@ class FabricateUnitRecordsStrategy(Strategy):
 
 
 class Aggregations(StrEnum):
-    SUM = "sum"
+    ANY_VALUE = "any_value"
+    ARRAY_AGG = "array_agg"
     AVG = "avg"
     COUNT = "count"
     COUNT_DISTINCT = "count_distinct"
-    ANY_VALUE = "any_value"
+    MAX = "max"
+    MIN = "min"
+    SUM = "sum"
 
 
 aggregation_values = [e.value for e in Aggregations.__members__.values()]

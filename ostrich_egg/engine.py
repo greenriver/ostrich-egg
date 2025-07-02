@@ -419,7 +419,7 @@ class Engine:
             peer_value_sql = f"""
                 select x as peer
                 from (
-                    select {sql_expressions.aliases}, sum({metric_name}) as total
+                    select {sql_expressions.aliases}
                     from identify_peers
                     where peer_id = $peer_id
                     group by {sql_expressions.aliases}
@@ -429,7 +429,6 @@ class Engine:
             peer_values, *_ = self.connector.duckdb_connection.sql(
                 query=peer_value_sql, params={"peer_id": peer_id}
             ).fetchone()
-            total = peer_values.pop("total", None)
 
             filter_by_peer = duckdb.ColumnExpression("peer_id").isin(peer_id)
             this_peer_relation = (
@@ -439,12 +438,13 @@ class Engine:
                     IS_ANONYMOUS_COLUMN,
                     *self.get_metric_aliases(initial=False).keys(),
                 )
-                .order(metric_sort)
+                .order(
+                    f"{IS_ANONYMOUS_COLUMN}, {metric_sort}, dimension_value nulls last"
+                )
             )
             peer_result, must_anonymize_next = (
                 self._collect_redactions_from_peer_relation(
                     this_peer_relation=this_peer_relation,
-                    peer_total=total,
                     peer_values=peer_values,
                     masking_value=masking_value,
                     must_anonymize_next=must_anonymize_next,
@@ -462,7 +462,6 @@ class Engine:
     def _collect_redactions_from_peer_relation(
         self,
         this_peer_relation: duckdb.DuckDBPyRelation,
-        peer_total: int,
         peer_values: dict,
         must_anonymize_next: bool = False,
         masking_value: str = DEFAULT_MASKING_VALUE,
@@ -480,7 +479,6 @@ class Engine:
         values_to_mask = []
         seen_values = []
 
-        anonymized = False
         row_count, *_ = this_peer_relation.count("*").fetchone()
         within_peer_index = 0
         values_meeting_redaction_criteria = []
@@ -490,6 +488,8 @@ class Engine:
                 break
             local_result = dict(zip(this_peer_relation.columns, local_result))
             value_is_fine = local_result[IS_ANONYMOUS_COLUMN]
+            dimension_value = local_result[DIMENSION_VALUE_COLUMN]
+            seen_values.append(dimension_value)
 
             if within_peer_index > 0:
                 working_subtotal_query_template = Template(
@@ -517,26 +517,19 @@ class Engine:
             else:
                 working_total_is_fine = value_is_fine
 
-            dimension_value = local_result[DIMENSION_VALUE_COLUMN]
-
-            seen_values.append(dimension_value)
-
             first_value_is_good = within_peer_index == 0 and value_is_fine
+
+            sufficient_prior_redaction = (
+                len(values_to_mask) >= 2 and working_total_is_fine
+            )
+
+            if sufficient_prior_redaction:
+                must_anonymize_next = False
 
             if not must_anonymize_next and first_value_is_good:
                 """
                 The first value in the peer group is already anonymized and we don't need to anonymize from a previous peer group, this is anonymous already.
                 """
-                anonymized = True
-                break
-
-            elif must_anonymize_next and value_is_fine:
-                """
-                Have to anonymize based on a previous redaction.
-                """
-                values_to_mask.append(dimension_value)
-                must_anonymize_next = False
-                anonymized = True
                 break
 
             elif not value_is_fine:
@@ -549,36 +542,18 @@ class Engine:
                 )
                 values_meeting_redaction_criteria.append(dimension_value)
                 values_to_mask.append(dimension_value)
-                must_anonymize_next = True
+                if not sufficient_prior_redaction:
+                    must_anonymize_next = True
 
-            elif (
-                len(values_to_mask) >= 1
-                and (not anonymized or must_anonymize_next)
-                and value_is_fine
-                and row_count > 2
-                and working_total_is_fine
-            ):
+            elif must_anonymize_next and value_is_fine:
                 """
-                There has been suppression of previous values and we are now safely anonymized
+                Have to anonymize based on a previous redaction.
                 """
-                filter_by_excluded_values = duckdb.ColumnExpression(
-                    DIMENSION_VALUE_COLUMN
-                ).isnotin(*[duckdb.ConstantExpression(v) for v in values_to_mask])
-                remainder, *_ = (
-                    this_peer_relation.filter(filter_by_excluded_values)
-                    .sum(METRIC_VALUE_COLUMN)
-                    .fetchone()
-                )
-
-                logger.debug(
-                    f"Latent revelation through subtraction suppressed: \
-                        Subtraction from total {peer_total} yields {remainder} with at least {row_count - len(values_to_mask)} revealed values out of {row_count}"
-                )
-                anonymized = True
+                values_to_mask.append(dimension_value)
                 must_anonymize_next = False
                 break
 
-            elif values_to_mask and not anonymized:
+            elif not sufficient_prior_redaction or must_anonymize_next:
                 """
                 This is the base case for latent suppression in which the value itself is fine but we must suppress to prevent latent revelation.
                 We will check the next iteration if the redaction leaves us with exclusively sufficiently large cells and no additional revelation through subtraction.
@@ -587,6 +562,14 @@ class Engine:
                     f"Redacting {dimension_value} as it would latently reveal an unacceptable metric value through subtraction."
                 )
                 values_to_mask.append(dimension_value)
+
+            elif sufficient_prior_redaction and value_is_fine:
+                """
+                This is the exit condition from when redaction is required; there is enough small cell suppression
+                and the values in this peer group from this value forward are all fine ( it was sorted by value ascending).
+                """
+                must_anonymize_next = False
+                break
 
             within_peer_index += 1
         if values_meeting_redaction_criteria:
@@ -707,19 +690,19 @@ class Engine:
         alter table output
           add column "is_redacted" boolean default false;
         alter table output
-          add column "redaction_group" json;
+          add column "peer_group" json;
+        alter table output
+          add column "redacted_peers" json;
+        alter table output
+          add column "redaction_reason" text;
         """
         self.connector.duckdb_connection.execute(alter_sql)
         self.connector.duckdb_connection.execute(
             "update output set is_redacted = true where not is_anonymous"
         )
         for redaction in redactions:
-            redaction_group = {
-                "peer_group": redaction.other_dimension_values,
-                f"redacted_{dimension_to_use}": list(redaction.remapped_lookup.keys()),
-                "reason": redaction.reason,
-            }
             for old, new in redaction.remapped_lookup.items():
+                peer_group = redaction.other_dimension_values.copy()
                 redaction.other_dimension_values[dimension_to_use] = old
                 filters = dict_to_filter_expressions(
                     data=redaction.other_dimension_values
@@ -728,11 +711,20 @@ class Engine:
                 update_sql = f"""
                 update output
                 set "is_redacted" = true,
-                "redaction_group" = $redaction_group
+                "redaction_reason" = $redaction_reason,
+                "peer_group" = $peer_group,
+                "redacted_peers" = $redacted_peers
                 where {condition}
                 """
                 self.connector.duckdb_connection.execute(
-                    query=update_sql, parameters={"redaction_group": redaction_group}
+                    query=update_sql,
+                    parameters={
+                        "redaction_reason": redaction.reason,
+                        "peer_group": peer_group,
+                        "redacted_peers": {
+                            dimension_to_use: list(redaction.remapped_lookup.keys())
+                        },
+                    },
                 )
         # Use this new table instead of the source data.
         self.final_source_table = "output"
