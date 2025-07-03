@@ -1,27 +1,26 @@
 [
   {
-    "incidence": 4,
-    "population_value": 300,
-    "purpose": "Provide a small cell that will accumulate latent suppression.",
+    "incidence": 11,
+    "population_value": 8000,
+    "purpose": "get suppressed due to peer (frankford within the same month for the same county)",
     "expected_to_be_redacted": true,
-    "month": "1900-01-01",
+    "month": "1900-02-01",
     "county": "county-sussex",
-    "municipality": null,
-    "zip_code": "zip-code-19931",
-    "is_anonymous": false,
+    "municipality": "ellendale",
+    "zip_code": "zip-code-19941",
+    "is_anonymous": true,
     "is_redacted": true,
     "peer_group": {
-      "month": "1900-01-01",
+      "month": "1900-02-01",
       "county": "county-sussex",
-      "municipality": null
+      "municipality": "ellendale"
     },
     "redacted_peers": {
       "zip_code": [
-        "zip-code-19931",
-        "zip-code-19945"
+        "zip-code-19941"
       ]
     },
-    "redaction_reason": "values zip-code-19931, zip-code-19945 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "redaction_reason": "value zip-code-18945 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
     "incidence": 200,
@@ -73,27 +72,53 @@
     "redaction_reason": "value zip-code-19967 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
-    "incidence": 11,
+    "incidence": 6,
     "population_value": 8000,
-    "purpose": "get suppressed due to peer (frankford within the same month for the same county)",
+    "purpose": "accumulate latent suppression.",
     "expected_to_be_redacted": true,
-    "month": "1900-02-01",
+    "month": "1900-01-01",
     "county": "county-sussex",
-    "municipality": "ellendale",
-    "zip_code": "zip-code-19941",
-    "is_anonymous": true,
+    "municipality": null,
+    "zip_code": "zip-code-19945",
+    "is_anonymous": false,
     "is_redacted": true,
     "peer_group": {
-      "month": "1900-02-01",
+      "month": "1900-01-01",
       "county": "county-sussex",
-      "municipality": "ellendale"
+      "municipality": null,
+      "zip_code": "zip-code-19931"
     },
     "redacted_peers": {
       "zip_code": [
-        "zip-code-19941"
+        "zip-code-19931",
+        "zip-code-19945"
       ]
     },
-    "redaction_reason": "value zip-code-18945 meets redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+    "redaction_reason": "values zip-code-19931, zip-code-19945 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
+  },
+  {
+    "incidence": 4,
+    "population_value": 300,
+    "purpose": "Provide a small cell that will accumulate latent suppression.",
+    "expected_to_be_redacted": true,
+    "month": "1900-01-01",
+    "county": "county-sussex",
+    "municipality": null,
+    "zip_code": "zip-code-19931",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": {
+      "month": "1900-01-01",
+      "county": "county-sussex",
+      "municipality": null
+    },
+    "redacted_peers": {
+      "zip_code": [
+        "zip-code-19931",
+        "zip-code-19945"
+      ]
+    },
+    "redaction_reason": "values zip-code-19931, zip-code-19945 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   },
   {
     "incidence": 1,
@@ -132,30 +157,5 @@
     "peer_group": null,
     "redacted_peers": null,
     "redaction_reason": null
-  },
-  {
-    "incidence": 6,
-    "population_value": 8000,
-    "purpose": "accumulate latent suppression.",
-    "expected_to_be_redacted": true,
-    "month": "1900-01-01",
-    "county": "county-sussex",
-    "municipality": null,
-    "zip_code": "zip-code-19945",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": {
-      "month": "1900-01-01",
-      "county": "county-sussex",
-      "municipality": null,
-      "zip_code": "zip-code-19931"
-    },
-    "redacted_peers": {
-      "zip_code": [
-        "zip-code-19931",
-        "zip-code-19945"
-      ]
-    },
-    "redaction_reason": "values zip-code-19931, zip-code-19945 meet redaction criteria\n case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n"
   }
 ]

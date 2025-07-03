@@ -33,12 +33,6 @@ DIMENSIONS = [
     "zip_code",
 ]
 
-# INITIAL_INCIDENCE_METRIC = Metric(
-#     aggregation=Aggregations.COUNT,
-#     column="*",
-#     alias="incidence",
-#     is_initial=True,
-# )
 INCIDENCE_METRIC = Metric(
     aggregation=Aggregations.SUM,
     column="incidence",
