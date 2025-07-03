@@ -143,11 +143,14 @@ class FabricateUnitRecordsStrategy(Strategy):
 
 
 class Aggregations(StrEnum):
-    SUM = "sum"
+    ANY_VALUE = "any_value"
+    ARRAY_AGG = "array_agg"
     AVG = "avg"
     COUNT = "count"
     COUNT_DISTINCT = "count_distinct"
-    ANY_VALUE = "any_value"
+    MAX = "max"
+    MIN = "min"
+    SUM = "sum"
 
 
 aggregation_values = [e.value for e in Aggregations.__members__.values()]
@@ -260,6 +263,15 @@ class Dataset(BaseModel):
             Field(
                 description="The internal SQL to produce the 'view' of this dataset",
                 default=None,
+            ),
+        ]
+    ] = None
+    redaction_order_dimensions: Optional[
+        Annotated[
+            Union[List[str], None],
+            Field(
+                default_factory=list,
+                description="The dimensions to order the redaction by. If not specified, the dimensions will be ordered by the order they are specified in the dataset.",
             ),
         ]
     ] = None

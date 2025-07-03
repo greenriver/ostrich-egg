@@ -113,7 +113,7 @@ class TestInitialMetrics:
                         INITIAL_POPULATION_METRIC,
                         SUBSEQUENT_POPULATION_METRIC,
                     ],
-                    output_file="implicit_metric.csv",
+                    output_file="explicit_metric.csv",
                     sql=generate_sql,
                     suppression_strategies=[
                         MarkRedacted(
@@ -142,7 +142,12 @@ class TestInitialMetrics:
         engine = Engine(config=explicit_config)
         engine.run()
         output = engine.db.read_csv(engine.active_dataset.output_file)  # noqa: F841
-        results = [r[0] for r in engine.db.sql("select output from output").fetchall()]
+        results = [
+            r[0]
+            for r in engine.db.sql(
+                "select x from ( select  incidence, population, month, county, zip_code, is_anonymous, is_redacted from output) x"
+            ).fetchall()
+        ]
         assert {
             "incidence": 20,
             "population": 4000,
