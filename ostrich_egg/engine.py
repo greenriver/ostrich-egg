@@ -5,6 +5,7 @@ The actual "workhorse" part of the anonymization service. This is where the data
 from __future__ import annotations
 from collections import namedtuple
 from copy import deepcopy
+from itertools import combinations
 import os
 from typing import Dict, List
 
@@ -33,7 +34,7 @@ from ostrich_egg.config import (
 )
 from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
 from ostrich_egg.connectors.s3 import key_as_s3_uri
-
+from ostrich_egg.redaction_utils import should_redact_along_axis
 
 DEFAULT_METRIC = "count(*)"
 DEFAULT_RESULT_NAME = "result"
@@ -615,6 +616,106 @@ class Engine:
         )
         return peer_result, must_anonymize_next
 
+    def redact_from_non_anonymous_cells(
+        self,
+        dimension: str,
+        masking_value=DEFAULT_MASKING_VALUE,
+        non_summable_dimensions: list[str] = [],
+    ):
+        masking_value = masking_value or DEFAULT_MASKING_VALUE
+
+        dimension_sets_to_check = [
+            dimension_set
+            for i in range(len(self.active_dimensions))
+            for dimension_set in combinations(self.active_dimensions, i + 1)
+        ]
+        order_by_columns = [self.active_dataset.metrics[0].alias, dimension]
+        if self.active_dataset.redaction_order_dimensions:
+            order_by_columns = list(
+                set(self.active_dataset.redaction_order_dimensions + order_by_columns)
+            )
+        order_by_column_sql = ", ".join(order_by_columns)
+        for dimension_set in dimension_sets_to_check:
+
+            # suppress rows in the same dimension set where the redacted cell was seen until it's anonymous.
+            partition_by = ", ".join([identifier(column) for column in dimension_set])
+            # metrics_sql = ", ".join(self.get_metric_sql_list(initial=False))
+            # metric_sort = ", ".join(self.get_metric_aliases(initial=False).keys())
+            peer_group_expression = (
+                "{" + ", ".join([f"{dim}: {dim}" for dim in dimension_set]) + "}"
+            )
+            non_summable_dimensions_expression = ""
+            non_summable_lag_expression = ""
+            if non_summable_dimensions:
+                non_summable_dimensions_expression = " and " + " and ".join(
+                    [
+                        f""" check_data."{dim}" = check_data."previous_{dim}" """
+                        for dim in non_summable_dimensions
+                    ]
+                )
+                non_summable_lag_expression = ", " + ", ".join(
+                    [
+                        f""" lag("{dim}") over(partition by {partition_by} order by {order_by_column_sql}) as "previous_{dim}" """
+                        for dim in non_summable_dimensions
+                    ]
+                )
+            dimension_expression = (
+                "{" + ", ".join([f"{dim}:{dim}" for dim in dimension_set]) + "}"
+            )
+            sql = f"""
+            with check_data as(
+                select *
+                   replace(
+                   coalesce(
+                   lag(
+                    {peer_group_expression}
+                    ) over(partition by {partition_by} order by {order_by_column_sql}), {peer_group_expression})::json as peer_group,
+                    coalesce(lag({dimension_expression}) over(partition by {partition_by} order by {order_by_column_sql}), {dimension_expression})::json as redacted_peers),
+                    lag(is_redacted) over(partition by {partition_by} order by {order_by_column_sql}) as previous_cell_redacted,
+                    lag(incidence) over(partition by {partition_by} order by {order_by_column_sql}) as previous_incidence,
+                    sum(incidence) over(partition by {partition_by} order by {order_by_column_sql}) as run_sum_by_axis,
+                    count(distinct county) filter(where is_redacted) over(partition by {partition_by} order by {order_by_column_sql}) as masked_value_count
+                    {non_summable_lag_expression}
+
+                from output
+            )
+            select *
+            from check_data
+            where not is_redacted
+            and should_redact_along_axis(
+                incidence:=incidence,
+                masked_value_count:=masked_value_count,
+                minimum_threshold:={self.threshold},
+                is_anonymous:=is_anonymous,
+                previous_cell_redacted:=previous_cell_redacted,
+                run_sum_by_axis:=run_sum_by_axis
+            )
+            {non_summable_dimensions_expression}
+
+            """
+            to_redact = self.db.sql(sql)
+            self.db.register("to_redact", to_redact)
+            to_redact_count = to_redact.count("*").fetchone()[0]
+            update_condition = " and ".join(
+                [
+                    f"output.{identifier(dim)} = to_redact.{identifier(dim)}"
+                    for dim in self.active_dimensions
+                ]
+            )
+            while to_redact_count > 0:
+                update_sql = f"""
+                update output
+                set is_redacted = true
+                , redacted_peers = to_redact.redacted_peers
+                , peer_group = to_redact.peer_group
+                from to_redact
+                where {update_condition}
+                """
+                self.db.execute(update_sql)
+                to_redact = self.db.sql(sql)
+                self.db.register("to_redact", to_redact)
+                to_redact_count = to_redact.count("*").fetchone()[0]
+
     def update_the_dataset(
         self, dimension, existing_values: list, new_value: str = "Redacted"
     ):
@@ -642,12 +743,32 @@ class Engine:
                 )
             )
 
+    def modify_output_for_redaction(self):
+        self.connector.duckdb_connection.execute(
+            "create or replace table output as select * from result"
+        )
+        alter_sql = """
+        alter table output
+          add column "is_redacted" boolean default false;
+        alter table output
+          add column "peer_group" json;
+        alter table output
+          add column "redacted_peers" json;
+        alter table output
+          add column "redaction_reason" text;
+        """
+        self.connector.duckdb_connection.execute(alter_sql)
+        self.connector.duckdb_connection.execute(
+            "update output set is_redacted = true where not is_anonymous"
+        )
+
     def replace_with_redacted(self, params: ReplaceWithRedactedParameters):
         """
         Sets the update expression to be used in the final result by assigning redaction
         values to dimensions.
         """
         # TODO: add in the non-summable dimensions?
+        self.modify_output_for_redaction()
         redactions = self.get_dimension_values_to_redact_with_latency_check(
             dimension=params.redacted_dimension,
             masking_value=params.masking_value,
@@ -668,11 +789,8 @@ class Engine:
         This is useful for when you need the source values for your process but need to indicate which cells
         must be suppressed.
         """
-        self.connector.duckdb_connection.execute(
-            "create or replace table output as select * from result"
-        )
+        self.modify_output_for_redaction()
         result_table = self.connector.duckdb_connection.table("output")
-
         dimension_to_use = params.redacted_dimension
         redactions = []
         if params.non_summable_dimensions:
@@ -699,20 +817,7 @@ class Engine:
             redactions = self.get_dimension_values_to_redact_with_latency_check(
                 dimension=dimension_to_use,
             )
-        alter_sql = """
-        alter table output
-          add column "is_redacted" boolean default false;
-        alter table output
-          add column "peer_group" json;
-        alter table output
-          add column "redacted_peers" json;
-        alter table output
-          add column "redaction_reason" text;
-        """
-        self.connector.duckdb_connection.execute(alter_sql)
-        self.connector.duckdb_connection.execute(
-            "update output set is_redacted = true where not is_anonymous"
-        )
+
         for redaction in redactions:
             for old, new in redaction.remapped_lookup.items():
                 peer_group = deepcopy(redaction.other_dimension_values)
@@ -812,6 +917,20 @@ class Engine:
         Read configs passed to the engine and processes the dataset to produce output accordingly.
         """
         self.connector.init_duckdb()
+
+        should_redact_function_exists_count = (
+            self.db.sql(
+                "from duckdb_functions() where function_name = 'should_redact_along_axis'"
+            )
+            .count("*")
+            .fetchone()[0]
+        )
+
+        if should_redact_function_exists_count == 0:
+            self.db.create_function(
+                "should_redact_along_axis", should_redact_along_axis
+            )
+
         for index, dataset in enumerate(self.datasets):
             self.run_one_dataset(index=index, dataset=dataset, output_file=output_file)
 
