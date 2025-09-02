@@ -5,7 +5,7 @@ import boto3
 import duckdb
 from jinja2 import Template
 
-from ostrich_egg.connectors.base import BaseConnector
+from ostrich_egg.connectors.base import BaseConnector, DEFAULT_TABLE_NAME
 
 # refer to https://duckdb.org/docs/configuration/secrets_manager
 DEFAULT_S3_SECRET_NAME = "__default_s3"
@@ -45,13 +45,14 @@ class S3Connector(BaseConnector):
         use_ssl: bool = True,
         url_style: Literal["vhost", "path"] = "vhost",
         chain: str = None,
+        table_name: str = DEFAULT_TABLE_NAME,
         *args,
         **kwargs,
     ):
         """
         See https://duckdb.org/docs/extensions/httpfs/s3api
         """
-        super().__init__(*args, **kwargs)
+        self.table_name = table_name
         self.bucket = bucket
         self.key = key
         self.region = region
@@ -63,6 +64,7 @@ class S3Connector(BaseConnector):
         self.endpoint = endpoint
         self.use_ssl = use_ssl
         self.url_style = url_style
+        self.init_duckdb()
 
     def __exit__(self):
         self.duckdb_connection.close()
@@ -151,7 +153,6 @@ class S3Connector(BaseConnector):
         bucket = bucket or self.bucket
         key = source_file or self.key
         key = key_as_s3_uri(bucket=bucket, key=key)
-        self.init_duckdb()
         self.duckdb_connection.execute(
             f"""
             create or replace table "{table_name}" as (

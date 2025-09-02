@@ -12,6 +12,20 @@ from typing import Dict, List
 import duckdb
 from jinja2 import Template
 
+from ostrich_egg.config import (
+    Aggregations,
+    Config,
+    DatasetConfig,
+    DEFAULT_THRESHOLD,
+    load_strategy_from_dict,
+    MarkRedactedParameters,
+    MergeDimensionValuesParameters,
+    Metric,
+    ReplaceWithRedactedParameters,
+    Strategy,
+)
+from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
+from ostrich_egg.connectors.s3 import key_as_s3_uri
 from ostrich_egg.utils import (
     DEFAULT_MASKING_VALUE,
     dict_to_filter_expressions,
@@ -19,22 +33,9 @@ from ostrich_egg.utils import (
     identifier,
     make_when_statement_from_dict,
     merge_conditions,
+    ostrich_egg_jinja_env,
 )
-from ostrich_egg.config import (
-    Config,
-    DatasetConfig,
-    ReplaceWithRedactedParameters,
-    MergeDimensionValuesParameters,
-    MarkRedactedParameters,
-    Metric,
-    Aggregations,
-    Strategy,
-    load_strategy_from_dict,
-    DEFAULT_THRESHOLD,
-)
-from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
-from ostrich_egg.connectors.s3 import key_as_s3_uri
-from ostrich_egg.redaction_utils import should_redact_along_axis
+
 
 DEFAULT_METRIC = "count(*)"
 DEFAULT_RESULT_NAME = "result"
@@ -622,97 +623,99 @@ class Engine:
         masking_value=DEFAULT_MASKING_VALUE,
         non_summable_dimensions: list[str] = [],
     ):
-        masking_value = masking_value or DEFAULT_MASKING_VALUE
+        """
+        Iteratively suppress adjacent cells according to dataset/suppression strategy configuration.
 
-        dimension_sets_to_check = [
-            dimension_set
-            for i in range(len(self.active_dimensions))
-            for dimension_set in combinations(self.active_dimensions, i + 1)
+        The `dimension` is the intended target of suppression; this is most-relevant in upstream processes
+        in which you need to redact across several dimensions.
+
+        The strategy is to find non-anonymous cells (those that met the redaction expression criteria) and sort the dataset
+        in a window partitioned by each combination of dimensions and ordering by the redacted dimension within the window (deferring to other sorting configurations first).
+
+        We then iteratively suppress the output until the conditions for anonymity are met by virtue of flagging the cells to redact.
+        """
+        masking_value = masking_value or DEFAULT_MASKING_VALUE
+        # TODO: Can we control which dimension sets get redacted?
+        dimension_sets_to_check = sorted(
+            [
+                dimension_set
+                for i in range(len(self.active_dimensions))
+                for dimension_set in combinations(self.active_dimensions, i + 1)
+            ],
+            key=lambda x: len(x),
+            reverse=True,
+        )
+        order_by_columns = [
+            "is_redacted desc",
+            identifier(dimension),
+            identifier(self.active_dataset.metrics[0].alias),
         ]
-        order_by_columns = [self.active_dataset.metrics[0].alias, dimension]
         if self.active_dataset.redaction_order_dimensions:
             order_by_columns = list(
-                set(self.active_dataset.redaction_order_dimensions + order_by_columns)
+                set(
+                    [
+                        identifier(d)
+                        for d in self.active_dataset.redaction_order_dimensions
+                    ]
+                    + order_by_columns
+                )
             )
-        order_by_column_sql = ", ".join(order_by_columns)
+
+        redaction_context_view_template = ostrich_egg_jinja_env.get_template(
+            "redaction_context_view.sql"
+        )
+
+        check_redacted_context_template = ostrich_egg_jinja_env.get_template(
+            "check_redacted_context.sql"
+        )
+
+        check_redacted_context_sql = check_redacted_context_template.render(
+            non_summable_dimensions=non_summable_dimensions,
+            threshold=self.threshold,
+            incidence_column=self.metrics[0].alias,
+        )
+
+        update_output_from_redaction_context_template = (
+            ostrich_egg_jinja_env.get_template(
+                "update_output_from_redaction_context.sql"
+            )
+        )
+
+        update_output_from_redaction_context_sql = (
+            update_output_from_redaction_context_template.render(
+                dimensions=self.active_dimensions,
+                output_table="output",
+            )
+        )
+
         for dimension_set in dimension_sets_to_check:
+            redaction_context_sql = redaction_context_view_template.render(
+                dimension_set=dimension_set,
+                order_by_columns=order_by_columns,
+                dimension=dimension,
+                non_summable_dimensions=non_summable_dimensions,
+                output_table="output",
+                incidence_column=self.metrics[0].alias,
+            )
+            logger.info(f"Creating redaction context view for {dimension_set}")
+            logger.debug(redaction_context_sql)
+            self.db.execute(
+                f"create or replace table redaction_context as\n\n {redaction_context_sql}"
+            )
 
-            # suppress rows in the same dimension set where the redacted cell was seen until it's anonymous.
-            partition_by = ", ".join([identifier(column) for column in dimension_set])
-            # metrics_sql = ", ".join(self.get_metric_sql_list(initial=False))
-            # metric_sort = ", ".join(self.get_metric_aliases(initial=False).keys())
-            peer_group_expression = (
-                "{" + ", ".join([f"{dim}: {dim}" for dim in dimension_set]) + "}"
-            )
-            non_summable_dimensions_expression = ""
-            non_summable_lag_expression = ""
-            if non_summable_dimensions:
-                non_summable_dimensions_expression = " and " + " and ".join(
-                    [
-                        f""" check_data."{dim}" = check_data."previous_{dim}" """
-                        for dim in non_summable_dimensions
-                    ]
-                )
-                non_summable_lag_expression = ", " + ", ".join(
-                    [
-                        f""" lag("{dim}") over(partition by {partition_by} order by {order_by_column_sql}) as "previous_{dim}" """
-                        for dim in non_summable_dimensions
-                    ]
-                )
-            dimension_expression = (
-                "{" + ", ".join([f"{dim}:{dim}" for dim in dimension_set]) + "}"
-            )
-            sql = f"""
-            with check_data as(
-                select *
-                   replace(
-                   coalesce(
-                   lag(
-                    {peer_group_expression}
-                    ) over(partition by {partition_by} order by {order_by_column_sql}), {peer_group_expression})::json as peer_group,
-                    coalesce(lag({dimension_expression}) over(partition by {partition_by} order by {order_by_column_sql}), {dimension_expression})::json as redacted_peers),
-                    lag(is_redacted) over(partition by {partition_by} order by {order_by_column_sql}) as previous_cell_redacted,
-                    lag(incidence) over(partition by {partition_by} order by {order_by_column_sql}) as previous_incidence,
-                    sum(incidence) over(partition by {partition_by} order by {order_by_column_sql}) as run_sum_by_axis,
-                    count(distinct county) filter(where is_redacted) over(partition by {partition_by} order by {order_by_column_sql}) as masked_value_count
-                    {non_summable_lag_expression}
+            logger.info(f"Looking for records to redact")
+            logger.debug(check_redacted_context_sql)
 
-                from output
-            )
-            select *
-            from check_data
-            where not is_redacted
-            and should_redact_along_axis(
-                incidence:=incidence,
-                masked_value_count:=masked_value_count,
-                minimum_threshold:={self.threshold},
-                is_anonymous:=is_anonymous,
-                previous_cell_redacted:=previous_cell_redacted,
-                run_sum_by_axis:=run_sum_by_axis
-            )
-            {non_summable_dimensions_expression}
-
-            """
-            to_redact = self.db.sql(sql)
+            to_redact = self.db.sql(check_redacted_context_sql)
             self.db.register("to_redact", to_redact)
             to_redact_count = to_redact.count("*").fetchone()[0]
-            update_condition = " and ".join(
-                [
-                    f"output.{identifier(dim)} = to_redact.{identifier(dim)}"
-                    for dim in self.active_dimensions
-                ]
-            )
             while to_redact_count > 0:
-                update_sql = f"""
-                update output
-                set is_redacted = true
-                , redacted_peers = to_redact.redacted_peers
-                , peer_group = to_redact.peer_group
-                from to_redact
-                where {update_condition}
-                """
-                self.db.execute(update_sql)
-                to_redact = self.db.sql(sql)
+                logger.info(f"Found {to_redact_count} records to redact")
+                self.db.execute(update_output_from_redaction_context_sql)
+                self.db.execute(
+                    f"create or replace table redaction_context as\n\n {redaction_context_sql}"
+                )
+                to_redact = self.db.sql(check_redacted_context_sql)
                 self.db.register("to_redact", to_redact)
                 to_redact_count = to_redact.count("*").fetchone()[0]
 
@@ -759,7 +762,12 @@ class Engine:
         """
         self.connector.duckdb_connection.execute(alter_sql)
         self.connector.duckdb_connection.execute(
-            "update output set is_redacted = true where not is_anonymous"
+            f"""\
+                update output
+                set is_redacted = true
+                , redaction_reason = $$value meets redaction criteria '{self.redaction_expression}'$$
+                where not is_anonymous
+            """
         )
 
     def replace_with_redacted(self, params: ReplaceWithRedactedParameters):
@@ -790,64 +798,10 @@ class Engine:
         must be suppressed.
         """
         self.modify_output_for_redaction()
-        result_table = self.connector.duckdb_connection.table("output")
-        dimension_to_use = params.redacted_dimension
-        redactions = []
-        if params.non_summable_dimensions:
-            columns = [identifier(dim) for dim in params.non_summable_dimensions]
-            pages = (
-                result_table.select(*columns)
-                .distinct()
-                .to_df()
-                .to_dict(orient="records")
-            )
-            for page in pages:
-                filters = dict_to_filter_expressions(data=page)
-                condition = merge_conditions(filters)
-                result = result_table.filter(condition)
-                self.connector.duckdb_connection.register("result", result)
-                page_redactions = (
-                    self.get_dimension_values_to_redact_with_latency_check(
-                        dimension=dimension_to_use
-                    )
-                )
-                redactions.extend(page_redactions)
-        else:
-            self.connector.duckdb_connection.register("result", result_table)
-            redactions = self.get_dimension_values_to_redact_with_latency_check(
-                dimension=dimension_to_use,
-            )
-
-        for redaction in redactions:
-            for old, new in redaction.remapped_lookup.items():
-                peer_group = deepcopy(redaction.other_dimension_values)
-                redaction.other_dimension_values[dimension_to_use] = old
-                filters = dict_to_filter_expressions(
-                    data=redaction.other_dimension_values
-                )
-                condition = merge_conditions(filters)
-                update_sql = f"""
-                update output
-                set "is_redacted" = true,
-                "redaction_reason" = $redaction_reason,
-                "peer_group" = $peer_group,
-                "redacted_peers" = $redacted_peers
-                where {condition}
-                """
-                if peer_group and not redaction.reason:
-                    logger.error(
-                        f"{redaction.other_dimension_values=} {redaction.remapped_lookup=}"
-                    )
-                self.connector.duckdb_connection.execute(
-                    query=update_sql,
-                    parameters={
-                        "redaction_reason": redaction.reason,
-                        "peer_group": peer_group,
-                        "redacted_peers": {
-                            dimension_to_use: list(redaction.remapped_lookup.keys())
-                        },
-                    },
-                )
+        self.redact_from_non_anonymous_cells(
+            dimension=params.redacted_dimension,
+            non_summable_dimensions=params.non_summable_dimensions or [],
+        )
         # Use this new table instead of the source data.
         self.final_source_table = "output"
 
@@ -916,21 +870,6 @@ class Engine:
         """
         Read configs passed to the engine and processes the dataset to produce output accordingly.
         """
-        self.connector.init_duckdb()
-
-        should_redact_function_exists_count = (
-            self.db.sql(
-                "from duckdb_functions() where function_name = 'should_redact_along_axis'"
-            )
-            .count("*")
-            .fetchone()[0]
-        )
-
-        if should_redact_function_exists_count == 0:
-            self.db.create_function(
-                "should_redact_along_axis", should_redact_along_axis
-            )
-
         for index, dataset in enumerate(self.datasets):
             self.run_one_dataset(index=index, dataset=dataset, output_file=output_file)
 

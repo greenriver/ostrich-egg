@@ -4,3 +4,5 @@ ipython==8.23.0
 moto[server]==5.1.1
 pytest==8.2.0
 pytest-asyncio==0.24.0
+pytest-timeout==2.4.0
+shandy-sqlfmt[jinjafmt]==0.27.0
