@@ -31,6 +31,7 @@ select
         )::json as redacted_peers
     ),
     lag(is_redacted) {{ partition_and_order_by }} as previous_cell_redacted,
+    lag(is_anonymous) {{ partition_and_order_by }} as previous_cell_is_anonymous,
     lag({{ incidence_column | identifier }}) {{ partition_and_order_by }} as previous_incidence,
     sum({{ incidence_column | identifier }}) {{ partition_and_order_by }} as run_sum_by_axis,
     count(*) filter(where is_redacted) over (

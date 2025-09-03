@@ -58,6 +58,15 @@ class MarkRedactedParameters(BaseModel):
             ),
         ]
     ] = None
+    first_order_only: Optional[
+        Annotated[
+            bool,
+            Field(
+                description="Whether to only redact cells to prevent latent revelation along a single axis of dimensions. Enabling reduces the total number of cells suppressed but creates a risk of transitive revelation across dimensions.",
+                default=False,
+            ),
+        ]
+    ] = False
 
 
 class MarkRedacted(Strategy):

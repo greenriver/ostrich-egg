@@ -622,6 +622,7 @@ class Engine:
         dimension: str,
         masking_value=DEFAULT_MASKING_VALUE,
         non_summable_dimensions: list[str] = [],
+        first_order_only: bool = False,
     ):
         """
         Iteratively suppress adjacent cells according to dataset/suppression strategy configuration.
@@ -635,7 +636,7 @@ class Engine:
         We then iteratively suppress the output until the conditions for anonymity are met by virtue of flagging the cells to redact.
         """
         masking_value = masking_value or DEFAULT_MASKING_VALUE
-        # TODO: Can we control which dimension sets get redacted?
+
         dimension_sets_to_check = sorted(
             [
                 dimension_set
@@ -673,6 +674,7 @@ class Engine:
             non_summable_dimensions=non_summable_dimensions,
             threshold=self.threshold,
             incidence_column=self.metrics[0].alias,
+            first_order_only=first_order_only,
         )
 
         update_output_from_redaction_context_template = (
@@ -711,6 +713,7 @@ class Engine:
             to_redact_count = to_redact.count("*").fetchone()[0]
             while to_redact_count > 0:
                 logger.info(f"Found {to_redact_count} records to redact")
+                logger.info(to_redact.to_df().to_json(orient="records", indent=2))
                 self.db.execute(update_output_from_redaction_context_sql)
                 self.db.execute(
                     f"create or replace table redaction_context as\n\n {redaction_context_sql}"
@@ -801,6 +804,7 @@ class Engine:
         self.redact_from_non_anonymous_cells(
             dimension=params.redacted_dimension,
             non_summable_dimensions=params.non_summable_dimensions or [],
+            first_order_only=params.first_order_only,
         )
         # Use this new table instead of the source data.
         self.final_source_table = "output"

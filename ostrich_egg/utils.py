@@ -73,13 +73,24 @@ def should_redact_along_axis(
     minimum_threshold: int | float = 11,
     is_anonymous: bool = True,
     previous_cell_redacted: bool | None = None,
+    previous_cell_is_anonymous: bool | None = None,
     run_sum_by_axis: float | int = 0,
+    first_order_only: bool = False,
 ) -> bool:
     """
     Given a set of dimensions (i.e., the axis) and some pre-calculated windowed rows,
     determine if the cell needs to be redacted based on the available criteria.
 
     This will be run iteratively until the dataset consists only of cells that are suppressed to anonymity.
+
+    The first_order_only flag will not redact cells if the previous cell in the window
+    was suppressed to redact along a different dimension.
+
+    This reduces the total amount of redaction and thus should be used cautiously as it _technically_ allows a very determined
+    actor to reveal the small cell by finding the methodically calculating the revelation-through-subtraction of other dimensional combinations.
+
+    If your use case already protects individuals and is only to implement a requirement not to display small cells or reveal through first-order subtraction,
+    then this can suppress small cells along each dimension that _the small cell_ could be revealed and does not redact other suppressed cells ensuring true anonymization..
     """
     if not is_anonymous:
         return True  # all non-anonymous cells need redacted.
@@ -87,12 +98,18 @@ def should_redact_along_axis(
         return False  # there is no latency in this pass, do not redact.
 
     # if previous_cell_redacted is True
-    if run_sum_by_axis - incidence >= minimum_threshold and masked_value_count >= 2:
-        return False  # The window along this axis is sufficiently redacted
-    # otherwise, we should redact this cell if
-    # the previous cell was redacted as the window being surveyed along this axis is insufficiently redacted.
-    # if the previous cell was not redacted, we do not need to redact this cell.
-    return previous_cell_redacted is True
+
+    if run_sum_by_axis - incidence >= minimum_threshold:
+        if first_order_only:
+            # we only need to suppress along the "view" of the dimensional axis,
+            # we're not suppressing suppressed cells only.
+            return not previous_cell_is_anonymous
+        else:
+            # default: we are suppressing along each axis and have to suppress all redacted cells
+            # so as not to enable revelation through subtraction across views.
+            return masked_value_count < 2
+    else:
+        return True
 
 
 ostrich_egg_jinja_env = Environment(

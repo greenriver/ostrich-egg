@@ -49,7 +49,46 @@ def test_basic_mark_redaction(file_system_config):
     non_anonymous_count, *_ = t.filter("not is_anonymous").count("*").fetchone()
     redaction_count, *_ = t.filter("is_redacted").count("*").fetchone()
     assert non_anonymous_count == 1
-    assert redaction_count == 2
+    assert redaction_count == 8
+
+    ###### Test first_order_only
+    file_system_config.datasets[0].suppression_strategies[
+        0
+    ].parameters.first_order_only = True
+    engine = Engine(config=file_system_config)
+    output_file = "/tmp/output.parquet"
+    engine.run()
+    validation_sql = f""" select * from '{output_file}' """
+    t = engine.connector.duckdb_connection.sql(validation_sql)
+    redaction_count, *_ = t.filter("is_redacted").count("*").fetchone()
+    got_redacted = [
+        # The anonymous cell
+        {
+            "age": 30,
+            "sex": "M",
+            "zip": "00000",
+            "library_friend": True,
+        },
+        {
+            "age": 40,
+            "sex": "F",
+            "zip": "00000",
+            "library_friend": True,
+        },
+        {
+            "age": 30,
+            "sex": "M",
+            "zip": "00000",
+            "library_friend": False,
+        },
+        {
+            "age": 40,
+            "sex": "M",
+            "zip": "00001",
+            "library_friend": True,
+        },
+    ]
+    assert redaction_count == 4
 
     # confirm that suppression strategies are deserialized correctly (i.e., assert no error)
     file_system_config.datasets[0].suppression_strategies[0] = {

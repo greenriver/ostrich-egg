@@ -11,7 +11,9 @@ where
         minimum_threshold := {{ threshold }},
         is_anonymous := is_anonymous,
         previous_cell_redacted := previous_cell_redacted,
-        run_sum_by_axis := run_sum_by_axis
+        previous_cell_is_anonymous := previous_cell_is_anonymous,
+        run_sum_by_axis := run_sum_by_axis,
+        first_order_only := {{ first_order_only | default(False) }}
     )
     {#- If any dimensions are not aggregable, i.e., users won't know the total sum of these dimensions,
     then we just need to only consider redacting values where those dimensions match.
