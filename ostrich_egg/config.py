@@ -36,6 +36,23 @@ class ReplaceWithRedactedParameters(BaseModel):
             ),
         ]
     ] = None
+    non_summable_dimensions: Optional[
+        Annotated[
+            Union[List[str], None],
+            Field(
+                description="List of dimensions that are part of the dataset but will not ever actually be aggregated. For example, if you have unrelated indicators in a column or years when you won't ever sum the total number of incidences across time (preventing revelation through subtraction). Use with caution."
+            ),
+        ]
+    ] = None
+    first_order_only: Optional[
+        Annotated[
+            bool,
+            Field(
+                description="Whether to only redact cells to prevent latent revelation along a single axis of dimensions. Enabling reduces the total number of cells suppressed but creates a risk of transitive revelation across dimensions.",
+                default=False,
+            ),
+        ]
+    ] = False
 
 
 class ReplaceWithRedacted(Strategy):
