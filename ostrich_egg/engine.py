@@ -649,7 +649,7 @@ class Engine:
         order_by_columns = [
             "is_redacted desc",
             identifier(dimension),
-            identifier(self.active_dataset.metrics[0].alias),
+            identifier(self.metrics[0].alias),
         ]
         if self.active_dataset.redaction_order_dimensions:
             order_by_columns = list(
@@ -687,6 +687,7 @@ class Engine:
             update_output_from_redaction_context_template.render(
                 dimensions=self.active_dimensions,
                 output_table="output",
+                threshold=self.threshold,
             )
         )
 
@@ -713,7 +714,7 @@ class Engine:
             to_redact_count = to_redact.count("*").fetchone()[0]
             while to_redact_count > 0:
                 logger.info(f"Found {to_redact_count} records to redact")
-                logger.info(to_redact.to_df().to_json(orient="records", indent=2))
+                logger.debug(to_redact.to_df().to_json(orient="records", indent=2))
                 self.db.execute(update_output_from_redaction_context_sql)
                 self.db.execute(
                     f"create or replace table redaction_context as\n\n {redaction_context_sql}"
@@ -757,9 +758,9 @@ class Engine:
         alter table output
           add column "is_redacted" boolean default false;
         alter table output
-          add column "peer_group" json;
+          add column "peer_group" json[];
         alter table output
-          add column "redacted_peers" json;
+          add column "redacted_peers" json[];
         alter table output
           add column "redaction_reason" text;
         """
@@ -768,8 +769,16 @@ class Engine:
             f"""\
                 update output
                 set is_redacted = true
-                , redaction_reason = $$value meets redaction criteria '{self.redaction_expression}'$$
+                , redaction_reason = $$value meets redaction criteria \n'{self.redaction_expression}'$$
                 where not is_anonymous
+            """
+        )
+
+    def update_output_json_types(self):
+        self.db.execute(
+            """\
+          alter table output alter column "peer_group" type json using peer_group::json[]::json;
+          alter table output alter column "redacted_peers" type json using redacted_peers::json[]::json;
             """
         )
 
@@ -806,6 +815,7 @@ class Engine:
             non_summable_dimensions=params.non_summable_dimensions or [],
             first_order_only=params.first_order_only,
         )
+        self.update_output_json_types()
         # Use this new table instead of the source data.
         self.final_source_table = "output"
 
