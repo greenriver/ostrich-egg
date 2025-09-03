@@ -4,7 +4,6 @@ The actual "workhorse" part of the anonymization service. This is where the data
 
 from __future__ import annotations
 from collections import namedtuple
-from copy import deepcopy
 from itertools import combinations
 import os
 from typing import Dict, List
@@ -28,11 +27,9 @@ from ostrich_egg.connectors import Connector, DEFAULT_TABLE_NAME
 from ostrich_egg.connectors.s3 import key_as_s3_uri
 from ostrich_egg.utils import (
     DEFAULT_MASKING_VALUE,
-    dict_to_filter_expressions,
     get_logger,
     identifier,
     make_when_statement_from_dict,
-    merge_conditions,
     ostrich_egg_jinja_env,
 )
 
@@ -441,7 +438,7 @@ class Engine:
                 f"create or replace table redaction_context as\n\n {redaction_context_sql}"
             )
 
-            logger.info(f"Looking for records to redact")
+            logger.info("Looking for records to redact")
             logger.debug(check_redacted_context_sql)
 
             to_redact = self.db.sql(check_redacted_context_sql)

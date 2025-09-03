@@ -1,6 +1,5 @@
 import os
 import json
-import pytest
 
 from engine import Engine
 from config import (

@@ -61,33 +61,6 @@ def test_basic_mark_redaction(file_system_config):
     validation_sql = f""" select * from '{output_file}' """
     t = engine.connector.duckdb_connection.sql(validation_sql)
     redaction_count, *_ = t.filter("is_redacted").count("*").fetchone()
-    got_redacted = [
-        # The anonymous cell
-        {
-            "age": 30,
-            "sex": "M",
-            "zip": "00000",
-            "library_friend": True,
-        },
-        {
-            "age": 40,
-            "sex": "F",
-            "zip": "00000",
-            "library_friend": True,
-        },
-        {
-            "age": 30,
-            "sex": "M",
-            "zip": "00000",
-            "library_friend": False,
-        },
-        {
-            "age": 40,
-            "sex": "M",
-            "zip": "00001",
-            "library_friend": True,
-        },
-    ]
     assert redaction_count == 4
 
     # confirm that suppression strategies are deserialized correctly (i.e., assert no error)
