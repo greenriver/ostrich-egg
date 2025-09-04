@@ -18,3 +18,7 @@ timeout        = 30
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "dependencies"]
+where   = ["ostrich_egg"]
+
+[tool.setuptools.package-data]
+templates = ["*.sql"]
