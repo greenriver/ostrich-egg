@@ -33,7 +33,9 @@ os.environ["S3_IGNORE_SUBDOMAIN_BUCKETNAME"] = "true"
 
 
 @pytest.fixture()
-def mocked_s3_res(moto_server):
+def mocked_s3_res(moto_server, monkeypatch):
+    monkeypatch.delenv("AWS_ENDPOINT_URL", raising=False)
+    monkeypatch.delenv("AIRFLOW_CONN_AWS_DEFAULT", raising=False)
     with mock_aws():
         yield boto3.resource("s3", endpoint_url=moto_server)
 

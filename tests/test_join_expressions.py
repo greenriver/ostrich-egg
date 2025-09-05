@@ -92,11 +92,15 @@ def s3_files_prefix(mock_s3_bucket, mocked_s3_client):
 class TestJoinExpressions:
 
     @pytest.fixture()
-    def joined_config(self, mock_s3_bucket):
+    def joined_config(self, mock_s3_bucket, moto_server):
         return Config(
             datasource=DataSource(
                 connection_type="s3",
-                parameters={"bucket": mock_s3_bucket, "key": "", **TEST_S3_PARAMS},
+                parameters={
+                    "bucket": mock_s3_bucket,
+                    "key": "",
+                    **TEST_S3_PARAMS | {"endpoint": moto_server.replace("http://", "")},
+                },
             ),
             redaction_expression=REDACTION_EXPRESSION,
             datasets=[
@@ -122,12 +126,13 @@ class TestJoinExpressions:
         joined_config,
         moto_server,
     ):
+
         engine = Engine(
             config=joined_config,
             output_prefix=s3_files_prefix,
             output_bucket=mock_s3_bucket,
         )
-        engine.connector.endpoint = moto_server.replace("http://", "")
+
         incidence_file = engine.get_absolute_source_file("test_joins_incidence.csv")
         population_file = engine.get_absolute_source_file("test_joins_population.csv")
         engine.datasets[0].sql = engine.datasets[0].sql.format(

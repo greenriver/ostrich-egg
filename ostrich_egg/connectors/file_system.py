@@ -15,7 +15,6 @@ class FileSystemConnector(BaseConnector):
         """
         table_name = table_name or self.table_name
         file_path = source_file or self.file_path
-        self.init_duckdb()
         self.duckdb_connection.execute(
             f"create or replace table {table_name} as (select * from '{file_path}')"
         )

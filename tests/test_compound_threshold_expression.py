@@ -157,15 +157,13 @@ def generate_population_redaction_rule_test_data():
         population=1_000,
         expected_to_be_anonymous=False,
     )
-    # This one will actually get latently redacted.
-    # TODO: The determinism on latent redaction, particularly across peers, needs improvement
     latent_low_incidence_big_population = PopulationTestRow(
         sex="M",
         zip="00001",
         incidence=2,
         population=20_000,
         expected_to_be_anonymous=True,
-        _expected_to_be_redacted=True,
+        _expected_to_be_redacted=False,
     )
     dict_rows = [
         row.to_dict()

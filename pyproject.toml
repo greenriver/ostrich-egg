@@ -1,19 +1,23 @@
 [project]
-name = "ostrich-egg"
-version = "0.0.0"
-description = "A tool for producing public analytics while protecting data privacy."
-readme = "README.md"
+name         = "ostrich-egg"
+version      = "0.0.0"
+description  = "A tool for producing public analytics while protecting data privacy."
+readme       = "README.md"
 dependencies = ["boto3", "duckdb", "jinja2", "pydantic"]
-authors = [{ name = "Jacob Hickson", email = "jhickson@greenriver.org" }]
+authors      = [{ name = "Jacob Hickson", email = "jhickson@greenriver.org" }]
 
 [build-system]
-requires = ["setuptools"]
+requires      = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-testpaths = "tests"
-addopts = "--tb=auto -vv --log-level=ERROR --log-cli-level=ERROR --show-capture=stderr"
+testpaths      = "tests"
+addopts        = "--tb=auto -vv --log-level=ERROR --log-cli-level=ERROR --show-capture=stderr"
 filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning"]
+timeout        = 30
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "dependencies"]
+
+[tool.setuptools.package-data]
+"*" = ["templates/*.sql"]

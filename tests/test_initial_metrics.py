@@ -173,5 +173,5 @@ class TestInitialMetrics:
             "county": "B",
             "zip_code": 23456,
             "is_anonymous": True,
-            "is_redacted": False,
+            "is_redacted": True,
         } in results

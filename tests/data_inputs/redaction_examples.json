@@ -46,8 +46,8 @@
         "zip_code": "zip-code-20000",
         "incidence": 60,
         "population_value": 8000,
-        "expected_to_be_redacted": false,
-        "purpose": "This is a big cell in a largely suppressed peer group."
+        "expected_to_be_redacted": true,
+        "purpose": "This will get suppressed due to the small cell in the peer group."
     },
     {
         "incidence": 1,

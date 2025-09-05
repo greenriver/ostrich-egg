@@ -1,0 +1,44 @@
+[
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 10,
+        "expected_to_be_redacted": true,
+        "note": "Small cell, gets redacted."
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 15,
+        "expected_to_be_redacted": true,
+        "note": "County dimension causes suppression of this cell."
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 16,
+        "expected_to_be_redacted": false,
+        "note": "This cell is not suppressed."
+    },
+    {
+        "county": "A",
+        "month": "2025-02",
+        "incidence": 12,
+        "expected_to_be_redacted": true,
+        "note": "This cell won't be suppressed by county, but it needs to be suppressed by month when grouping by county."
+    },
+    {
+        "county": "B",
+        "month": "2025-02",
+        "incidence": 17,
+        "expected_to_be_redacted": true,
+        "note": "To prevent latent revelation, this would also need to be suppressed so as not to be able to work systematically to the originally suppressed cell by different totals."
+    },
+    {
+        "county": "C",
+        "month": "2025-02",
+        "incidence": 18,
+        "expected_to_be_redacted": false,
+        "note": "This will not be suppressed."
+    }
+]
