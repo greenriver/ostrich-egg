@@ -4,7 +4,14 @@ Configuration schema
 
 from typing import Any, Union, Annotated, List, Sequence, Optional, Literal
 
-from pydantic import BaseModel, Field, AliasChoices, TypeAdapter
+from pydantic import (
+    BaseModel,
+    Field,
+    AliasChoices,
+    TypeAdapter,
+    AfterValidator,
+    field_serializer,
+)
 from enum import StrEnum
 
 from ostrich_egg.utils import identifier, get_logger, DEFAULT_MASKING_VALUE
@@ -250,6 +257,37 @@ class Metric(BaseModel):
         return initial_conditions_match or counter_condition_does_not_exclude
 
 
+class DimensionOrder(BaseModel):
+    dimension: str
+    direction: Literal["asc", "desc"] = "asc"
+
+    @property
+    def sql_expression(self) -> str:
+        """
+        For use in templates so you can just | join(', ') the list.
+        """
+        return f"{identifier(self.dimension)} {self.direction}"
+
+
+def validate_dimension_orders(
+    dimension_orders: List[Union[str, DimensionOrder]] | None,
+):
+    """
+    Partially for backwards compatibility but also ease-of-use, the user could just plausibly specify as list of dimensions and we'll assume they meant to order them in ascending order.
+    """
+
+    valid_dimension_orders = []
+    if not dimension_orders:
+        return valid_dimension_orders
+
+    for dimension_order in dimension_orders:
+        if isinstance(dimension_order, str):
+            valid_dimension_orders.append(DimensionOrder(dimension=dimension_order))
+        elif isinstance(dimension_order, DimensionOrder):
+            valid_dimension_orders.append(dimension_order)
+    return valid_dimension_orders
+
+
 class Dataset(BaseModel):
 
     name: Optional[
@@ -294,13 +332,26 @@ class Dataset(BaseModel):
     ] = None
     redaction_order_dimensions: Optional[
         Annotated[
-            Union[List[str], None],
+            Union[List[DimensionOrder], List[str], None],
+            AfterValidator(validate_dimension_orders),
             Field(
                 default_factory=list,
-                description="The dimensions to order the redaction by. If not specified, the dimensions will be ordered by the order they are specified in the dataset.",
+                description="The dimensions to order the redaction by. If not specified, the dimensions will be ordered by the order they are specified in the dataset ascending.",
             ),
         ]
-    ] = None
+    ] = Field(
+        default_factory=list,
+    )
+
+    @field_serializer("redaction_order_dimensions")
+    def serialize_redaction_order_dimensions(
+        self, dimension_orders: List[Union[str, DimensionOrder]] | None
+    ):
+        return (
+            None
+            if not dimension_orders
+            else validate_dimension_orders(dimension_orders)
+        )
 
 
 class DataSource(BaseModel):

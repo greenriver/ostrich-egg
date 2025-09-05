@@ -1,0 +1,51 @@
+datasource:
+  connection_type: file
+  parameters:
+    output_directory: /tmp/
+allow_zeroes: true
+datasets:
+  - name: test_high_dimensional_config
+    dimensions:
+      - year
+      - month
+      - zip_code
+    metrics:
+      - aggregation: sum
+        column: incidence
+        alias: incidence
+        is_initial: true
+        is_subsequent: true
+      - aggregation: sum
+        alias: population_value
+        column: population_value
+        is_initial: true
+        is_subsequent: true
+      - aggregation: any_value
+        alias: population_value
+        column: population_value
+        is_initial: true
+        is_subsequent: true
+      - aggregation: any_value
+        alias: expected_to_redact
+        column: expected_to_redact
+        is_initial: true
+        is_subsequent: true
+    redaction_order_dimensions:
+      - dimension: year
+        direction: asc
+      - dimension: month
+        direction: asc
+      - dimension: population_value
+        direction: asc
+    suppression_strategies:
+      - parameters:
+          first_order_only: true
+          non_summable_dimensions: null
+          redacted_dimension: zip_code
+        strategy: mark-redacted
+redaction_expression: >
+  case
+    when population_value < 2000 then true
+    when incidence < 11 then true else false
+  end
+threshold: 11

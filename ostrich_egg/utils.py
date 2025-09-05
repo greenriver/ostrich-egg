@@ -103,7 +103,7 @@ def should_redact_along_axis(
         if first_order_only:
             # we only need to suppress along the "view" of the dimensional axis,
             # we're not suppressing suppressed cells only.
-            return not previous_cell_is_anonymous
+            return previous_cell_is_anonymous is False and masked_value_count < 2
         else:
             # default: we are suppressing along each axis and have to suppress all redacted cells
             # so as not to enable revelation through subtraction across views.

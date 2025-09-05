@@ -15,6 +15,7 @@ from ostrich_egg.config import (
     Aggregations,
     Config,
     DatasetConfig,
+    DimensionOrder,
     DEFAULT_THRESHOLD,
     load_strategy_from_dict,
     MarkRedactedParameters,
@@ -378,25 +379,6 @@ class Engine:
             key=lambda x: len(x),
             reverse=True,
         )
-        order_by_columns = [
-            "is_redacted desc",
-            identifier(dimension),
-            identifier(self.metrics[0].alias),
-        ]
-        if self.active_dataset.redaction_order_dimensions:
-            order_by_columns = list(
-                set(
-                    [
-                        identifier(d)
-                        for d in self.active_dataset.redaction_order_dimensions
-                    ]
-                    + order_by_columns
-                )
-            )
-
-        redaction_context_view_template = ostrich_egg_jinja_env.get_template(
-            "redaction_context_view.sql"
-        )
 
         check_redacted_context_template = ostrich_egg_jinja_env.get_template(
             "check_redacted_context.sql"
@@ -424,6 +406,32 @@ class Engine:
         )
 
         for dimension_set in dimension_sets_to_check:
+            dimension_set_order_by_columns = [
+                DimensionOrder(dimension=dimension) for dimension in dimension_set
+            ]
+            order_by_columns = [
+                # small cells on top
+                DimensionOrder(dimension="is_anonymous", direction="asc"),
+                # followed by already redacted ones
+                DimensionOrder(dimension="is_redacted", direction="desc"),
+                # then user configuration for prioritization
+                *self.active_dataset.redaction_order_dimensions,
+                # then sort within the dimension set window
+                *[
+                    dim
+                    for dim in dimension_set_order_by_columns
+                    if dim.dimension
+                    not in self.active_dataset.redaction_order_dimensions
+                ],
+                # then sort by the dimension to redact
+                DimensionOrder(dimension=dimension),
+                # with smallest cells above bigger cells.
+                DimensionOrder(dimension=self.metrics[0].alias),
+            ]
+
+            redaction_context_view_template = ostrich_egg_jinja_env.get_template(
+                "redaction_context_view.sql"
+            )
             redaction_context_sql = redaction_context_view_template.render(
                 dimension_set=dimension_set,
                 order_by_columns=order_by_columns,
@@ -431,12 +439,12 @@ class Engine:
                 non_summable_dimensions=non_summable_dimensions,
                 output_table="output",
                 incidence_column=self.metrics[0].alias,
+                active_dimensions=self.active_dimensions,
             )
             logger.info(f"Creating redaction context view for {dimension_set}")
             logger.debug(redaction_context_sql)
-            self.db.execute(
-                f"create or replace table redaction_context as\n\n {redaction_context_sql}"
-            )
+            redaction_context_view = self.db.sql(redaction_context_sql)
+            self.db.register("redaction_context", redaction_context_view)
 
             logger.info("Looking for records to redact")
             logger.debug(check_redacted_context_sql)
@@ -448,9 +456,7 @@ class Engine:
                 logger.info(f"Found {to_redact_count} records to redact")
                 logger.debug(to_redact.to_df().to_json(orient="records", indent=2))
                 self.db.execute(update_output_from_redaction_context_sql)
-                self.db.execute(
-                    f"create or replace table redaction_context as\n\n {redaction_context_sql}"
-                )
+
                 to_redact = self.db.sql(check_redacted_context_sql)
                 self.db.register("to_redact", to_redact)
                 to_redact_count = to_redact.count("*").fetchone()[0]

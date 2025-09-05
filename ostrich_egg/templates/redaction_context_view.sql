@@ -5,11 +5,19 @@ For each each combination of dimensions, the calling method `redact_from_non_ano
 passes configurations for sorting and partitioning the dataset such that we find latent revelation through iterative windows.
  #}
 {%- set partition_and_order_by -%}
-over( partition by {{dimension_set | list_of_identifiers}} order by {{order_by_columns | join(', ')}})
+over( partition by {{dimension_set | list_of_identifiers}} order by {{order_by_columns | map(attribute='sql_expression') | join(', ')}})
 {%- endset -%}
 {%- set peer_group_expression -%}
 { {#- -#}
 {% for dim in dimension_set %}
+    {{ dim | identifier }}:{{ dim | identifier }}{% if not loop.last %}, {% endif %}
+{% endfor %}
+{#- -#} }
+{%- endset -%}
+
+{%- set previous_row_expression -%}
+{ {#- -#}
+{% for dim in active_dimensions %}
     {{ dim | identifier }}:{{ dim | identifier }}{% if not loop.last %}, {% endif %}
 {% endfor %}
 {#- -#} }
@@ -37,7 +45,7 @@ select
     count(*) filter(where is_redacted) over (
         partition by {{ dimension_set | list_of_identifiers }}
     ) as masked_value_count,
-    lag("output") {{ partition_and_order_by }} as previous_row
+    lag({{previous_row_expression}}) {{ partition_and_order_by }} as previous_row
     {%- for dim in non_summable_dimensions %}
         , lag({{ dim | identifier }}) {{ partition_and_order_by }} as "previous_{{ dim | dequote }}"
     {%- endfor %},

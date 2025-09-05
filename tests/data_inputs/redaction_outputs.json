@@ -1,20 +1,5 @@
 [
   {
-    "incidence": 4,
-    "population_value": 300,
-    "purpose": "Provide a small cell that will accumulate latent suppression.",
-    "expected_to_be_redacted": true,
-    "month": "1900-01-01",
-    "county": "county-sussex",
-    "municipality": null,
-    "zip_code": "zip-code-19931",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": null,
-    "redacted_peers": null,
-    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
-  },
-  {
     "incidence": 200,
     "population_value": 2000,
     "purpose": "force suppression within peer group (municipality millville)",
@@ -23,36 +8,6 @@
     "county": "county-sussex",
     "municipality": "millville",
     "zip_code": "zip-code-19967",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": null,
-    "redacted_peers": null,
-    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
-  },
-  {
-    "incidence": 6,
-    "population_value": 8000,
-    "purpose": "accumulate latent suppression.",
-    "expected_to_be_redacted": true,
-    "month": "1900-01-01",
-    "county": "county-sussex",
-    "municipality": null,
-    "zip_code": "zip-code-19945",
-    "is_anonymous": false,
-    "is_redacted": true,
-    "peer_group": null,
-    "redacted_peers": null,
-    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
-  },
-  {
-    "incidence": 1,
-    "population_value": 8000,
-    "purpose": "force suppression of across peer groups",
-    "expected_to_be_redacted": true,
-    "month": "1900-02-01",
-    "county": "county-sussex",
-    "municipality": "frankford",
-    "zip_code": "zip-code-18945",
     "is_anonymous": false,
     "is_redacted": true,
     "peer_group": null,
@@ -85,7 +40,37 @@
         "zip_code": "zip-code-19970"
       }
     ],
-    "redaction_reason": "{\"incidence\":200,\"population_value\":2000,\"purpose\":\"force suppression within peer group (municipality millville)\",\"expected_to_be_redacted\":true,\"month\":\"1900-01-01\",\"county\":\"county-sussex\",\"municipality\":\"millville\",\"zip_code\":\"zip-code-19967\",\"is_anonymous\":false,\"is_redacted\":true,\"peer_group\":null,\"redacted_peers\":null,\"redaction_reason\":\"value meets redaction criteria \\n'case\\n    when population_value is null then true\\n    when incidence = 0 then false\\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\\n    when population_value >= 20000 then false\\n    when population_value < 2500 then true\\n    else false\\nend\\n'\"} was a small cell"
+    "redaction_reason": "{\"month\":\"1900-01-01\",\"county\":\"county-sussex\",\"municipality\":\"millville\",\"zip_code\":\"zip-code-19967\"} was a small cell"
+  },
+  {
+    "incidence": 4,
+    "population_value": 300,
+    "purpose": "Provide a small cell that will accumulate latent suppression.",
+    "expected_to_be_redacted": true,
+    "month": "1900-01-01",
+    "county": "county-sussex",
+    "municipality": null,
+    "zip_code": "zip-code-19931",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": null,
+    "redacted_peers": null,
+    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
+  },
+  {
+    "incidence": 6,
+    "population_value": 8000,
+    "purpose": "accumulate latent suppression.",
+    "expected_to_be_redacted": true,
+    "month": "1900-01-01",
+    "county": "county-sussex",
+    "municipality": null,
+    "zip_code": "zip-code-19945",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": null,
+    "redacted_peers": null,
+    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
   },
   {
     "incidence": 60,
@@ -113,7 +98,7 @@
         "zip_code": "zip-code-20000"
       }
     ],
-    "redaction_reason": "{\"incidence\":6,\"population_value\":8000,\"purpose\":\"accumulate latent suppression.\",\"expected_to_be_redacted\":true,\"month\":\"1900-01-01\",\"county\":\"county-sussex\",\"municipality\":null,\"zip_code\":\"zip-code-19945\",\"is_anonymous\":false,\"is_redacted\":true,\"peer_group\":null,\"redacted_peers\":null,\"redaction_reason\":\"value meets redaction criteria \\n'case\\n    when population_value is null then true\\n    when incidence = 0 then false\\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\\n    when population_value >= 20000 then false\\n    when population_value < 2500 then true\\n    else false\\nend\\n'\"} was a small cell"
+    "redaction_reason": "{\"month\":\"1900-01-01\",\"county\":\"county-sussex\",\"municipality\":null,\"zip_code\":\"zip-code-19945\"} was a small cell"
   },
   {
     "incidence": 11,
@@ -140,6 +125,21 @@
         "zip_code": "zip-code-19941"
       }
     ],
-    "redaction_reason": "{\"incidence\":1,\"population_value\":8000,\"purpose\":\"force suppression of across peer groups\",\"expected_to_be_redacted\":true,\"month\":\"1900-02-01\",\"county\":\"county-sussex\",\"municipality\":\"frankford\",\"zip_code\":\"zip-code-18945\",\"is_anonymous\":false,\"is_redacted\":true,\"peer_group\":null,\"redacted_peers\":null,\"redaction_reason\":\"value meets redaction criteria \\n'case\\n    when population_value is null then true\\n    when incidence = 0 then false\\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\\n    when population_value >= 20000 then false\\n    when population_value < 2500 then true\\n    else false\\nend\\n'\"} was a small cell"
+    "redaction_reason": "{\"month\":\"1900-02-01\",\"county\":\"county-sussex\",\"municipality\":\"frankford\",\"zip_code\":\"zip-code-18945\"} was a small cell"
+  },
+  {
+    "incidence": 1,
+    "population_value": 8000,
+    "purpose": "force suppression of across peer groups",
+    "expected_to_be_redacted": true,
+    "month": "1900-02-01",
+    "county": "county-sussex",
+    "municipality": "frankford",
+    "zip_code": "zip-code-18945",
+    "is_anonymous": false,
+    "is_redacted": true,
+    "peer_group": null,
+    "redacted_peers": null,
+    "redaction_reason": "value meets redaction criteria \n'case\n    when population_value is null then true\n    when incidence = 0 then false\n    when incidence < 11 and population_value >= 2500 and population_value < 20000 then true\n    when population_value >= 20000 then false\n    when population_value < 2500 then true\n    else false\nend\n'"
   }
 ]

@@ -1,0 +1,709 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "Aggregations": {
+      "enum": [
+        "any_value",
+        "array_agg",
+        "avg",
+        "count",
+        "count_distinct",
+        "max",
+        "min",
+        "sum"
+      ],
+      "title": "Aggregations",
+      "type": "string"
+    },
+    "DataSource": {
+      "properties": {
+        "connection_type": {
+          "description": "The type of connection to use for this data source. Must be one of \"s3\" \"file\" or \"postgres.",
+          "enum": [
+            "s3",
+            "file"
+          ],
+          "title": "Connection Type",
+          "type": "string"
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "description": "Connection parameters for the data source",
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parameters"
+        }
+      },
+      "required": [
+        "connection_type"
+      ],
+      "title": "DataSource",
+      "type": "object"
+    },
+    "DatasetConfig": {
+      "description": "Service configuration",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A human-friendly way to name this dataset"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "dimensions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A list of dimensions that should are included in the dataset. These are the actual column headers. If null, then all columns excluding the unit-level-id and the metrics will be considered dimensions.",
+          "title": "Dimensions"
+        },
+        "unit-level-id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The column name for the unit-level-id, e.g., not-aggregate but identifies a unique record. This will be ignored in calculations except for count(distinct unit-level-id) and the metrics will group by the dimensions.",
+          "title": "Unit-Level-Id"
+        },
+        "initial_metrics": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Metric"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "An initial set of metrics that will be produced from the first aggregation of the dataset; if not specified and no unit-level-id, will just use count(*). If unit-level-id, will use count(distinct unit-level-id).",
+          "title": "Initial Metrics"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Metric"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The metrics that will be produced when aggregation is run. If not specified and no unit-level-id, will use count(*). If unit-level-id, will use count(distinct unit-level-id). If only count(*) is specified, a metric will be added to the engine to run subsequently to sum the count metric.",
+          "title": "Metrics"
+        },
+        "sql": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "The internal SQL to produce the 'view' of this dataset"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sql"
+        },
+        "redaction_order_dimensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/$defs/DimensionOrder"
+                  },
+                  "type": "array"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The dimensions to order the redaction by. If not specified, the dimensions will be ordered by the order they are specified in the dataset ascending."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Redaction Order Dimensions"
+        },
+        "source_file": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "At present this is called a file for simplicity. It's actually likely a key for s3 or a fully qualified table name for postgres. If not specified, the source is in the datasource."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source File"
+        },
+        "suppression-strategies": {
+          "anyOf": [
+            {
+              "items": {
+                "discriminator": {
+                  "mapping": {
+                    "mark-redacted": "#/$defs/MarkRedacted",
+                    "merge-dimension-values": "#/$defs/MergeDimensionValuesStrategy",
+                    "reduce-dimensions": "#/$defs/ReduceDimensionsStrategy",
+                    "replace-with-redacted": "#/$defs/ReplaceWithRedacted"
+                  },
+                  "propertyName": "strategy"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/ReduceDimensionsStrategy"
+                  },
+                  {
+                    "$ref": "#/$defs/MergeDimensionValuesStrategy"
+                  },
+                  {
+                    "$ref": "#/$defs/ReplaceWithRedacted"
+                  },
+                  {
+                    "$ref": "#/$defs/MarkRedacted"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "List of suppression strategies",
+          "title": "Suppression-Strategies"
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The filepath you want want to write out to. In the future, this can be more of an object that can configure things like table, s3 location, etc, but for Proof-of-concept just writing to file (which is really an s3 key)"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output File"
+        },
+        "extra": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Dataset-level configurations for your application. For example, if you need to map the results of intermediary dimensionality."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extra"
+        }
+      },
+      "required": [
+        "dimensions"
+      ],
+      "title": "DatasetConfig",
+      "type": "object"
+    },
+    "DimensionOrder": {
+      "properties": {
+        "dimension": {
+          "title": "Dimension",
+          "type": "string"
+        },
+        "direction": {
+          "default": "asc",
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "title": "Direction",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dimension"
+      ],
+      "title": "DimensionOrder",
+      "type": "object"
+    },
+    "MarkRedacted": {
+      "description": "Simply flag cells that must be suppressed by virtue of values under threshold or by virtue of requirement through latent revelation.",
+      "properties": {
+        "strategy": {
+          "const": "mark-redacted",
+          "default": "mark-redacted",
+          "title": "Strategy",
+          "type": "string"
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MarkRedactedParameters"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "MarkRedacted",
+      "type": "object"
+    },
+    "MarkRedactedParameters": {
+      "properties": {
+        "redacted_dimension": {
+          "description": "The dimension to check for redaction. The output's `is_redacted` flag will apply to this dimension. One iteration will only produce cell-level suppression and applies only to this dimension. You must iterate for other dimensions to achieve full dataset anonymization.",
+          "title": "Redacted Dimension",
+          "type": "string"
+        },
+        "non_summable_dimensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "List of dimensions that are part of the dataset but will not ever actually be aggregated. For example, if you have unrelated indicators in a column or years when you won't ever sum the total number of incidences across time (preventing revelation through subtraction). Use with caution."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Non Summable Dimensions"
+        },
+        "first_order_only": {
+          "anyOf": [
+            {
+              "default": false,
+              "description": "Whether to only redact cells to prevent latent revelation along a single axis of dimensions. Enabling reduces the total number of cells suppressed but creates a risk of transitive revelation across dimensions.",
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "First Order Only"
+        }
+      },
+      "required": [
+        "redacted_dimension"
+      ],
+      "title": "MarkRedactedParameters",
+      "type": "object"
+    },
+    "MergeDimensionValuesParameters": {
+      "properties": {
+        "dimension": {
+          "description": "The dimension whose values are to be merged",
+          "title": "Dimension",
+          "type": "string"
+        },
+        "values": {
+          "description": "The ordinal precedence for which values to merge into one another",
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
+        },
+        "merged_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The name of the value to merge the values into.",
+          "title": "Merged Value"
+        }
+      },
+      "required": [
+        "dimension",
+        "values"
+      ],
+      "title": "MergeDimensionValuesParameters",
+      "type": "object"
+    },
+    "MergeDimensionValuesStrategy": {
+      "properties": {
+        "strategy": {
+          "const": "merge-dimension-values",
+          "title": "Strategy",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "The list of dimensions with their values and merged values to apply.",
+          "items": {
+            "$ref": "#/$defs/MergeDimensionValuesParameters"
+          },
+          "title": "Parameters",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strategy",
+        "parameters"
+      ],
+      "title": "MergeDimensionValuesStrategy",
+      "type": "object"
+    },
+    "Metric": {
+      "properties": {
+        "aggregation": {
+          "$ref": "#/$defs/Aggregations",
+          "description": "What aggregation to use for this metric. one of ['any_value', 'array_agg', 'avg', 'count', 'count_distinct', 'max', 'min', 'sum'] "
+        },
+        "column": {
+          "description": "The column name this metric wraps around. if pre-aggregated, just use sum                 (assuming you have correctly flagged the dimensions to aggregate). Use star for COUNT ",
+          "title": "Column",
+          "type": "string"
+        },
+        "alias": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Alias for this metric to use as a name for reporting it. Not strictly necessary but might make reading the report easier if you have multiple metrics."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alias"
+        },
+        "null_is_zero": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "If true, null values will be treated as 0 via coalesce. If false, null values will be discarded in the result of the aggregation.",
+          "title": "Null Is Zero"
+        },
+        "expression": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A literal expression to use for the metric. Let's a user create advanced custom metrics",
+          "title": "Expression"
+        },
+        "is_initial": {
+          "default": false,
+          "description": "Whether this metric is only an initial metric against the base dataset to produce the initial aggregation before running latent checks. It is by default false.",
+          "title": "Is Initial",
+          "type": "boolean"
+        },
+        "is_subsequent": {
+          "description": "Whether this metric is a subsequent metric that runs after the initial metric. It is by default the opposite of is_initial; a metric could be the same for both, especially if already a a sum or average or any_value aggregation.",
+          "title": "Is Subsequent",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "aggregation",
+        "column"
+      ],
+      "title": "Metric",
+      "type": "object"
+    },
+    "ReduceDimensionsParameters": {
+      "properties": {
+        "dimensions": {
+          "description": "A prioritized sequential list of the dimensions to 'prune' for re-aggregation; the service will attempt to re-aggregate and re-sample in this order. ",
+          "items": {
+            "type": "string"
+          },
+          "title": "Dimensions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dimensions"
+      ],
+      "title": "ReduceDimensionsParameters",
+      "type": "object"
+    },
+    "ReduceDimensionsStrategy": {
+      "properties": {
+        "strategy": {
+          "const": "reduce-dimensions",
+          "title": "Strategy",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ReduceDimensionsParameters",
+          "description": "An object containing parameters for the strategy"
+        }
+      },
+      "required": [
+        "strategy",
+        "parameters"
+      ],
+      "title": "ReduceDimensionsStrategy",
+      "type": "object"
+    },
+    "ReplaceWithRedacted": {
+      "properties": {
+        "strategy": {
+          "const": "replace-with-redacted",
+          "default": "replace-with-redacted",
+          "title": "Strategy",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ReplaceWithRedactedParameters"
+        }
+      },
+      "required": [
+        "parameters"
+      ],
+      "title": "ReplaceWithRedacted",
+      "type": "object"
+    },
+    "ReplaceWithRedactedParameters": {
+      "properties": {
+        "redacted_dimension": {
+          "description": "The dimension to check for redaction. The output's `is_redacted` flag will apply to this dimension. One iteration will only produce cell-level suppression and applies only to this dimension. You must iterate for other dimensions to achieve full dataset anonymization.",
+          "title": "Redacted Dimension",
+          "type": "string"
+        },
+        "dimensions": {
+          "description": "A prioritized sequential list of the dimensions to mark small values as `redacted` (or other masking value)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Dimensions",
+          "type": "array"
+        },
+        "masking_value": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "redacted",
+              "description": "The masking value to apply to values in the dimension."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Masking Value"
+        },
+        "non_summable_dimensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "List of dimensions that are part of the dataset but will not ever actually be aggregated. For example, if you have unrelated indicators in a column or years when you won't ever sum the total number of incidences across time (preventing revelation through subtraction). Use with caution."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Non Summable Dimensions"
+        },
+        "first_order_only": {
+          "anyOf": [
+            {
+              "default": false,
+              "description": "Whether to only redact cells to prevent latent revelation along a single axis of dimensions. Enabling reduces the total number of cells suppressed but creates a risk of transitive revelation across dimensions.",
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "First Order Only"
+        }
+      },
+      "required": [
+        "redacted_dimension",
+        "dimensions"
+      ],
+      "title": "ReplaceWithRedactedParameters",
+      "type": "object"
+    }
+  },
+  "description": "The actual configuration for the service will typically take the shape of a single datasource and multiple datasets.\nItems can callback to variables or anchors.\nThe outlet is assumed to be always the same type for now, we can complicate later.",
+  "properties": {
+    "datasource": {
+      "$ref": "#/$defs/DataSource"
+    },
+    "allow_zeroes": {
+      "default": true,
+      "description": "Whether a 0 value counts as below the threshold for evaluating anonymity. By default, this is true, meaning a 0 is considered anonymous. When false, 0 is considered a small number that is masked.",
+      "title": "Allow Zeroes",
+      "type": "boolean"
+    },
+    "redaction_expression": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "This expression is used in the aggregation queries to determine if a cell should be redacted. If not specified, then the first metric will be evaluated at the default threshold of 11.",
+      "title": "Redaction Expression"
+    },
+    "datasets": {
+      "items": {
+        "$ref": "#/$defs/DatasetConfig"
+      },
+      "title": "Datasets",
+      "type": "array"
+    },
+    "threshold": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": 11,
+      "description": "[DEPRECATED]: Single value for a threshold, being replaced by an expression.",
+      "title": "Threshold"
+    }
+  },
+  "required": [
+    "datasource",
+    "datasets"
+  ],
+  "title": "Config",
+  "type": "object"
+}
