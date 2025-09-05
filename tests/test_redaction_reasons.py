@@ -108,9 +108,9 @@ class TestRedactionReasons:
 
         engine = Engine(config=explicit_config)
         engine.run()
-        output = engine.db.read_csv(engine.active_dataset.output_file).order(
-            "month, county, municipality, zip_code"
-        )  # noqa: F841
+        output = engine.db.read_csv(  # noqa: F841
+            engine.active_dataset.output_file
+        ).order("month, county, municipality, zip_code")
         results = [
             r[0]
             for r in engine.db.sql(
