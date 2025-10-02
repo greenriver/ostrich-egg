@@ -1,0 +1,7 @@
+duckdb>=0.8.0
+jinja2>=3.0.0
+pyyaml>=6.0
+pandas>=1.5.0
+boto3
+pydantic
+git+https://github.com/greenriver/ostrich-egg.git
