@@ -1,0 +1,569 @@
+[
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 12,
+        "population_value": 10000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 15,
+        "population_value": 7500,
+        "age_range": "18_30",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell in same peer group"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 8,
+        "population_value": 7500,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 14,
+        "population_value": 7500,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 7,
+        "population_value": 7500,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 5,
+        "population_value": 6000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-11",
+        "incidence": 3,
+        "population_value": 4000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county A Nov: 64 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 18,
+        "population_value": 15000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 22,
+        "population_value": 11250,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 19,
+        "population_value": 11250,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 30_40 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 16,
+        "population_value": 11250,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 13,
+        "population_value": 11250,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 50_60 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 9,
+        "population_value": 9000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "B",
+        "month": "2024-11",
+        "incidence": 6,
+        "population_value": 6000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county B Nov: 103 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 25,
+        "population_value": 20000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 28,
+        "population_value": 15000,
+        "age_range": "18_30",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell in same peer group"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 24,
+        "population_value": 15000,
+        "age_range": "30_40",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 21,
+        "population_value": 15000,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 17,
+        "population_value": 15000,
+        "age_range": "50_60",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 14,
+        "population_value": 12000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-11",
+        "incidence": 11,
+        "population_value": 8000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell in same peer group"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 15,
+        "population_value": 10000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 12,
+        "population_value": 7500,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 9,
+        "population_value": 7500,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 16,
+        "population_value": 7500,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 8,
+        "population_value": 7500,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 6,
+        "population_value": 6000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2024-12",
+        "incidence": 4,
+        "population_value": 4000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county A Dec: 70 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 20,
+        "population_value": 15000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 24,
+        "population_value": 11250,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 21,
+        "population_value": 11250,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 30_40 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 18,
+        "population_value": 11250,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 15,
+        "population_value": 11250,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 50_60 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 10,
+        "population_value": 9000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "B",
+        "month": "2024-12",
+        "incidence": 7,
+        "population_value": 6000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county B Dec: 115 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 30,
+        "population_value": 20000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 32,
+        "population_value": 15000,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 28,
+        "population_value": 15000,
+        "age_range": "30_40",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 25,
+        "population_value": 15000,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 19,
+        "population_value": 15000,
+        "age_range": "50_60",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 16,
+        "population_value": 12000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2024-12",
+        "incidence": 12,
+        "population_value": 8000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases. Total county C Dec: 162 cases"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 18,
+        "population_value": 10000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 15,
+        "population_value": 7500,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 10,
+        "population_value": 7500,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 13,
+        "population_value": 7500,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 9,
+        "population_value": 7500,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 7,
+        "population_value": 6000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "A",
+        "month": "2025-01",
+        "incidence": 5,
+        "population_value": 4000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county A Jan: 77 cases. Latent revelation: 77 - 18 - 15 - 13 = 31, but some age bands are redacted"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 22,
+        "population_value": 15000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 26,
+        "population_value": 11250,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 23,
+        "population_value": 11250,
+        "age_range": "30_40",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 30_40 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 20,
+        "population_value": 11250,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 17,
+        "population_value": 11250,
+        "age_range": "50_60",
+        "expected_to_be_redacted": true,
+        "note": "Suppressed due to latent revelation: County A 50_60 was a small cell in same peer group"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 8,
+        "population_value": 9000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted"
+    },
+    {
+        "county": "B",
+        "month": "2025-01",
+        "incidence": 6,
+        "population_value": 6000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": true,
+        "note": "Small cell < 11 cases, must be redacted. Total county B Jan: 122 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 35,
+        "population_value": 20000,
+        "age_range": "under_18",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 38,
+        "population_value": 15000,
+        "age_range": "18_30",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 32,
+        "population_value": 15000,
+        "age_range": "30_40",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 29,
+        "population_value": 15000,
+        "age_range": "40_50",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 24,
+        "population_value": 15000,
+        "age_range": "50_60",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 19,
+        "population_value": 12000,
+        "age_range": "60_70",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases"
+    },
+    {
+        "county": "C",
+        "month": "2025-01",
+        "incidence": 15,
+        "population_value": 8000,
+        "age_range": "70_plus",
+        "expected_to_be_redacted": false,
+        "note": "Safe to report, >= 11 cases. Total county C Jan: 192 cases"
+    }
+]
