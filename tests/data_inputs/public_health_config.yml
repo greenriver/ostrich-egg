@@ -1,0 +1,42 @@
+datasource:
+  connection_type: file
+  parameters:
+    output_directory: /tmp/
+allow_zeroes: true
+datasets:
+  - name: public_health_reporting
+    dimensions:
+      - county
+      - month
+      - age_range
+    metrics:
+      - aggregation: sum
+        column: incidence
+        alias: incidence
+        is_initial: true
+        is_subsequent: true
+      - aggregation: sum
+        alias: population_value
+        column: population_value
+        is_initial: true
+        is_subsequent: true
+    redaction_order_dimensions:
+      - dimension: county
+        direction: asc
+      - dimension: month
+        direction: asc
+      - dimension: age_range
+        direction: asc
+    suppression_strategies:
+      - parameters:
+          first_order_only: false
+          non_summable_dimensions: null
+          redacted_dimension: age_range
+        strategy: mark-redacted
+redaction_expression: >
+  case
+    when population_value < 2500 then true
+    when incidence < 11 then true
+    else false
+  end
+threshold: 11
