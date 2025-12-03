@@ -15,7 +15,7 @@
         "population_value": 7500,
         "age_range": "18_30",
         "expected_to_be_redacted": true,
-        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell in same peer group"
+        "note": "Suppressed due to latent revelation: County B 70_plus suppressed County B 18_30, which would be revealed by subtracting if this cell is not suppressed."
     },
     {
         "county": "A",
@@ -60,7 +60,7 @@
         "population_value": 4000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county A Nov: 64 cases"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "B",
@@ -123,7 +123,7 @@
         "population_value": 6000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county B Nov: 103 cases"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "C",
@@ -186,7 +186,7 @@
         "population_value": 8000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell in same peer group"
+        "note": "Suppressed due to latent revelation: County B 70_plus was a small cell so to avoid revealing by subtraction when summing age groups across counties for this month this also needs to be suppressed."
     },
     {
         "county": "A",
@@ -249,7 +249,7 @@
         "population_value": 4000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county A Dec: 70 cases"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "B",
@@ -276,7 +276,7 @@
         "population_value": 11250,
         "age_range": "30_40",
         "expected_to_be_redacted": true,
-        "note": "Suppressed due to latent revelation: County A 30_40 was a small cell in same peer group"
+        "note": "Suppressed due to latent revelation: County A 30_40 was a small cell in same peer group so to avoid revealing by subtraction when summing age groups across counties for this month this also needs to be suppressed."
     },
     {
         "county": "B",
@@ -294,7 +294,7 @@
         "population_value": 11250,
         "age_range": "50_60",
         "expected_to_be_redacted": true,
-        "note": "Suppressed due to latent revelation: County A 50_60 was a small cell in same peer group"
+        "note": "Suppressed due to latent revelation: County A 50_60 was a small cell in same peer group so to avoid revealing by subtraction when summing age groups across counties for this month this also needs to be suppressed."
     },
     {
         "county": "B",
@@ -312,7 +312,7 @@
         "population_value": 6000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county B Dec: 115 cases"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "C",
@@ -375,7 +375,7 @@
         "population_value": 8000,
         "age_range": "70_plus",
         "expected_to_be_redacted": false,
-        "note": "Safe to report, >= 11 cases. Total county C Dec: 162 cases"
+        "note": "Safe to report, >= 11 cases."
     },
     {
         "county": "A",
@@ -438,7 +438,7 @@
         "population_value": 4000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county A Jan: 77 cases. Latent revelation: 77 - 18 - 15 - 13 = 31, but some age bands are redacted"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "B",
@@ -501,7 +501,7 @@
         "population_value": 6000,
         "age_range": "70_plus",
         "expected_to_be_redacted": true,
-        "note": "Small cell < 11 cases, must be redacted. Total county B Jan: 122 cases"
+        "note": "Small cell < 11 cases, must be redacted."
     },
     {
         "county": "C",
@@ -564,6 +564,6 @@
         "population_value": 8000,
         "age_range": "70_plus",
         "expected_to_be_redacted": false,
-        "note": "Safe to report, >= 11 cases. Total county C Jan: 192 cases"
+        "note": "Safe to report, >= 11 cases."
     }
 ]

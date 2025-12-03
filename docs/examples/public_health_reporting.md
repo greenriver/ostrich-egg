@@ -40,7 +40,7 @@ See test data: [public_health_example.json](../../tests/data_inputs/public_healt
 
 The engine minimizes cell suppression while checking all possible dimension combinations to prevent data disclosure.
 
-**Configuration Examples based on reporting needs:**
+**Configuration examples based on reporting needs:**
 
 - **`first_order_only: true`**: Only prevents direct revelation of redacted cells (not latent disclosure through subtraction). Use when multi-layer obfuscation is acceptable—useful, for example during public health emergencies when more demographic precision is needed while still protecting privacy.
 
