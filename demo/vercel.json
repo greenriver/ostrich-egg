@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/suppress-data.py": {
+      "runtime": "@vercel/python@4.3.0"
+    }
+  }
+}
