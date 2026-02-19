@@ -78,7 +78,7 @@ class S3Connector(BaseConnector):
         self.create_s3_secret()
 
     def get_instance_creds(self):
-        aws_session = boto3.Session()
+        aws_session = boto3.Session(region_name=self.region)
         creds = aws_session.get_credentials().get_frozen_credentials()
         self.region = aws_session.region_name or self.region
         return creds
