@@ -139,7 +139,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":5}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":5,\"zip_code\":5} was a small cell"
   },
   {
@@ -165,7 +165,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":6}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":6,\"zip_code\":5} was a small cell"
   },
   {
@@ -217,7 +217,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":8}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":8,\"zip_code\":5} was a small cell"
   },
   {
@@ -269,7 +269,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":10}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":10,\"zip_code\":5} was a small cell"
   },
   {
@@ -295,7 +295,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":11}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":11,\"zip_code\":5} was a small cell"
   },
   {
@@ -321,7 +321,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2020,\"month\":12}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2020,\"month\":12,\"zip_code\":5} was a small cell"
   },
   {
@@ -360,7 +360,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":1}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":1,\"zip_code\":5} was a small cell"
   },
   {
@@ -386,7 +386,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":2}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":2,\"zip_code\":5} was a small cell"
   },
   {
@@ -425,7 +425,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":3}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":3,\"zip_code\":5} was a small cell"
   },
   {
@@ -451,7 +451,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":4}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":4,\"zip_code\":5} was a small cell"
   },
   {
@@ -477,7 +477,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":5}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":5,\"zip_code\":5} was a small cell"
   },
   {
@@ -503,7 +503,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":6}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":6,\"zip_code\":5} was a small cell"
   },
   {
@@ -542,7 +542,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":7}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":7,\"zip_code\":5} was a small cell"
   },
   {
@@ -568,7 +568,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":8}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":8,\"zip_code\":5} was a small cell"
   },
   {
@@ -607,7 +607,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":9}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":9,\"zip_code\":5} was a small cell"
   },
   {
@@ -633,7 +633,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":10}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":10,\"zip_code\":5} was a small cell"
   },
   {
@@ -659,7 +659,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":11}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":11,\"zip_code\":5} was a small cell"
   },
   {
@@ -685,7 +685,7 @@
     "is_anonymous":true,
     "is_redacted":true,
     "peer_group":"[{\"year\":2021,\"month\":12}]",
-    "redacted_peers":"[{\"zip_code\":5},{\"zip_code\":4}]",
+    "redacted_peers":"[{\"zip_code\":5}, {\"zip_code\":4}]",
     "redaction_reason":"{\"year\":2021,\"month\":12,\"zip_code\":5} was a small cell"
   },
   {
