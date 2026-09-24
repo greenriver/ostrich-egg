@@ -1,12 +1,17 @@
 name: Python CI
 
-# No paths: filter. Dependency and config changes break this package as readily as .py
-# changes do, and a filtered-out PR reports no checks at all rather than a skip.
 on:
   push:
+    paths:
+      - "**.py"
     branches:
       - main
   pull_request:
+    paths:
+      - "**.py"
+    branches:
+      - "*"
+      - "*/*"
 
 # Read-only default so a job added without a permissions: block cannot inherit
 # write-all.
