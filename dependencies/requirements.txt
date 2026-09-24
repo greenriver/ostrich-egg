@@ -1,5 +1,12 @@
-boto3==1.37.7
-duckdb==1.3.2
-jinja2==3.1.5
-pandas==2.2.3
-pydantic==2.10.6
+# Runtime dependencies, pinned to the versions the golden Airflow image
+# (github.com/greenriver/airflow) resolves. openpath-airflow installs this package into
+# that image, so testing against anything else tests a combination nobody runs -- duckdb
+# was pinned at 1.3.2 here while that image ships 1.5.5.
+#
+# pandas is here because engine.py's .to_df() needs it (and the numpy it brings), even
+# though nothing imports it by name -- duckdb reaches for it internally.
+boto3==1.43.56
+duckdb==1.5.5
+jinja2==3.1.6
+pandas==2.3.3
+pydantic==2.13.4

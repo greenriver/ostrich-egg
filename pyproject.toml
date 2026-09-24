@@ -1,9 +1,18 @@
 [project]
 name         = "ostrich-egg"
-version      = "0.0.0"
+version      = "0.1.0"
 description  = "A tool for producing public analytics while protecting data privacy."
 readme       = "README.md"
-dependencies = ["boto3", "duckdb", "jinja2", "pydantic"]
+# pandas is a real runtime dependency, not a test one: engine.py calls duckdb's .to_df(),
+# which returns a pandas DataFrame and fails with "'numpy' is required for this operation"
+# without it. It was pinned in dependencies/requirements.txt but missing here, so a plain
+# `pip install ostrich-egg` produced a package that broke on its own main code path.
+# Left unpinned so consumers constrain it -- the golden Airflow image holds it below 3.
+dependencies = ["boto3", "duckdb", "jinja2", "pandas", "pydantic"]
+# Declared so a consumer resolving against a pinned interpreter gets a clear error rather
+# than an arbitrary one. 3.12 is what CI has always tested; 3.13 is what the golden Airflow
+# image (github.com/greenriver/airflow) runs, and openpath-airflow installs this into it.
+requires-python = ">=3.12"
 authors      = [{ name = "Jacob Hickson", email = "jhickson@greenriver.org" }]
 
 [build-system]

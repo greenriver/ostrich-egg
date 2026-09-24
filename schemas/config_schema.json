@@ -29,6 +29,7 @@
         "parameters": {
           "anyOf": [
             {
+              "additionalProperties": true,
               "description": "Connection parameters for the data source",
               "type": "object"
             },
@@ -265,6 +266,7 @@
             {
               "anyOf": [
                 {
+                  "additionalProperties": true,
                   "type": "object"
                 },
                 {
